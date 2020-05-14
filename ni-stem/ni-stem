@@ -1,0 +1,39 @@
+#!/usr/bin/python
+
+import argparse
+
+import _internal
+
+parser = argparse.ArgumentParser(prog='NI-Stem')
+subparsers = parser.add_subparsers()
+
+def _create(args):
+
+    creator = _internal.StemCreator(args.mixdown, args.stems, args.format, args.metadata, args.tags)
+    creator.save(args.output)
+
+parserCreate = subparsers.add_parser("create", help="Create a STEM container file.")
+parserCreate.add_argument("-x", "--mixdown",   dest="mixdown",           help="mixdown track", required=True)
+parserCreate.add_argument("-s", "--stems",     dest="stems",    nargs=4, help="STEM tracks",   required=True)
+parserCreate.add_argument("-m", "--metadata",  dest="metadata",          help="JSON-formatted metadata file")
+parserCreate.add_argument("-o", "--output",    dest="output",            help="output file")
+parserCreate.add_argument("-f", "--format",    dest="format",            help="output file format")
+parserCreate.add_argument("-t", "--tags",      dest="tags",              help="tags as json")
+parserCreate.set_defaults(func=_create)
+
+def _view(args):
+    viewer = _internal.StemMetadataViewer(args.stem)
+    viewer.dump(args.metadata, args.report)
+
+parserView = subparsers.add_parser("info", help="View STEM metadata.")
+parserView.add_argument("-s", "--stem",     dest="stem",     help="stem file", required=True)
+parserView.add_argument("-m", "--metadata", dest="metadata", help="JSON-formatted metadata file")
+parserView.add_argument("-r", "--report",   dest="report",   help="Metadata file in human-readable form")
+parserView.set_defaults(func=_view)
+
+args = parser.parse_args()
+
+try:
+    args.func(args)
+except Exception as e:
+    print e

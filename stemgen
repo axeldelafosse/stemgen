@@ -1,0 +1,219 @@
+#!/bin/bash
+
+LOGO="
+ _____ _____ _____ _____ _____ _____ _____ 
+|   __|_   _|   __|     |   __|   __|   | |
+|__   | | | |   __| | | |  |  |   __| | | |
+|_____| |_| |_____|_|_|_|_____|_____|_|___|
+
+"
+
+SUPPORTED_FILES=('.wav' '.wave' '.aif' '.aiff' '.flac')
+
+USAGE="$LOGO
+Stemgen is a Stem file generator. Convert any track into a stem and have fun with Traktor.
+
+Usage: $0 -i [path]
+
+Supported input file format: ${SUPPORTED_FILES[@]}
+"
+VERSION=1.0.0
+
+INPUT_PATH=
+BASE_PATH=
+FILE_NAME=
+FILE_EXTENSION=
+
+get_cover() {
+    echo "Extracting cover..."
+
+    ffmpeg -i "$INPUT_PATH" -an -vcodec copy "output/$FILE_NAME/cover.jpg" -y
+
+    echo "Done."
+}
+
+get_metadata() {
+    echo "Extracting metadata..."
+
+    ffmpeg -i "$INPUT_PATH" -f ffmetadata "output/$FILE_NAME/metadata.txt" -y
+
+    echo "Done."
+}
+
+convert_to_wav() {
+    echo "Converting to wav..."
+
+    ffmpeg -i "$INPUT_PATH" -map_metadata 0:s:0 "output/$FILE_NAME/$FILE_NAME.wav" -y
+
+    echo "Done."
+}
+
+create_tags_json() {
+    echo "Creating tags.json..."
+
+    cd "output/$FILE_NAME"
+
+    local path=$( cd "$(dirname "$FILE_NAME")" >/dev/null 2>&1 ; pwd -P )
+
+    echo $path
+
+    local tags=()
+
+    # Add metadata, e.g. `artist` `genre`
+    while IFS=$'\n' read tag; do
+        title=${tag%%=*}
+        title=$(echo "$title" | awk '{ print tolower($0) }')
+        value=${tag##*=}
+        if [[ $title == "title" ]]; then
+            # Add meta `title` as `track` for `ni-stem`
+            tags+=("track=${value}")
+        elif [[ $title == "artist" ]] || [[ $title == "label" ]] ||
+           [[ $title == "genre" ]] || [[ $title == "release" ]]; then
+            tags+=("${title}=${value}")
+        fi
+    done < metadata.txt
+
+    # Add `cover`
+    if [[ -e "cover.jpg" ]]; then
+        tags+=("cover=file://${path}/cover.jpg")
+    fi
+
+    echo ${tags[@]}
+
+    jo -p -- "${tags[@]}" > tags.json
+
+    cd ../../
+
+    echo "Done."
+}
+
+split_song() {
+    echo "Splitting song..."
+
+    spleeter separate -i "$INPUT_PATH" -p spleeter:4stems-16kHz -o output
+
+    echo "Done."
+}
+
+create_stem() {
+    echo "Creating stem..."
+
+    ./ni-stem/ni-stem create -s "output/$FILE_NAME/drums.wav" "output/$FILE_NAME/bass.wav" "output/$FILE_NAME/other.wav" "output/$FILE_NAME/vocals.wav" -x "output/$FILE_NAME/$FILE_NAME.wav" -t "output/$FILE_NAME/tags.json" -m metadata.json -f alac
+
+    echo "Done."
+}
+
+clean_dir() {
+    echo "Cleaning..."
+
+    cd "output/$FILE_NAME"
+    if [[ -f "$FILE_NAME.stem.m4a" ]]; then
+        mv "$FILE_NAME.stem.m4a" ..
+    else
+        echo "Error."
+        exit 2
+    fi
+    cd ..
+    rm -rf "$FILE_NAME"
+
+    echo "Done."
+}
+
+setup_file() {
+    FILE_EXTENSION=$1
+    FILE_NAME=${BASE_PATH%"$FILE_EXTENSION"}
+
+    if [[ -d "output/$FILE_NAME" ]]; then
+        echo "Working dir already created."
+    else
+        mkdir "output/$FILE_NAME"
+        echo "Working dir created."
+    fi
+}
+
+setup() {
+    packages=('ffmpeg' 'spleeter' 'jo')
+    for package in "${packages[@]}"; do
+        if [[ $(which $package) == "" ]]; then
+            echo "Please install $package before running Stemgen."
+            exit 2
+        fi
+    done
+
+    if [[ $(./ni-stem/ni-stem -h) == "" ]]; then
+        echo "Please install ni-stem before running Stemgen."
+        exit 2
+    fi
+
+    if [[ -d output ]]; then
+        echo "Output dir already created."
+    else
+        mkdir output
+        echo "Output dir created."
+    fi
+
+    BASE_PATH=${INPUT_PATH##*/}
+
+    case "$INPUT_PATH" in
+        *.wave)
+            setup_file .wave
+            cp "$INPUT_PATH" "output/$FILE_NAME/$FILE_NAME.wav"
+            ;;
+        *.wav)
+            setup_file .wav
+            cp "$INPUT_PATH" "output/$FILE_NAME/$FILE_NAME.wav"
+            ;;
+        *.aiff)
+            setup_file .aiff
+            convert_to_wav
+            ;;
+        *.aif)
+            setup_file .aif
+            convert_to_wav
+            ;;
+        *.flac)
+            setup_file .flac
+            convert_to_wav
+            ;;
+        *)
+            echo "Invalid input file format. File should be one of:" ${SUPPORTED_FILES[@]}
+            exit 1
+            ;;
+    esac
+
+    echo "Ready!"
+}
+
+run() {
+    echo "Generating a Stem file for $FILE_NAME..."
+
+    get_cover
+    get_metadata
+    create_tags_json
+    split_song
+    create_stem
+    clean_dir
+
+    echo "Success! Have fun :)"
+}
+
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
+    -V | --version)
+        echo $VERSION
+        exit 0
+        ;;
+    -i | --input)
+        shift; INPUT_PATH=$1
+        ;;
+    -h | --help)
+        echo "$USAGE"
+        exit 0
+        ;;
+    * )
+        echo "$USAGE"
+        exit 1
+        ;;
+esac; shift; done
+if [[ "$1" == '--' ]]; then shift; fi
+
+setup && run

@@ -1,0 +1,11 @@
+# General
+.DS_Store
+
+# Thumbnails
+._*
+
+# Stemgen
+output/*
+
+# Spleeter
+pretrained_models/*
