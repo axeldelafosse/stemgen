@@ -80,7 +80,7 @@ create_tags_json() {
 
     echo ${tags[@]}
 
-    jo -p -- "${tags[@]}" > tags.json
+    jo -p -- "${tags[@]:-}" > tags.json
 
     cd ../../
 
