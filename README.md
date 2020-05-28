@@ -26,6 +26,7 @@ Stems are fun but nobody's releasing them. Stemgen is a way to create your own s
 
 ## Usage
 
+- Clone this repo (downloading instead of cloning loses permissions to execute files)
 - `$ ./stemgen -i track.wav`
 - Have fun! Your new `.stem.m4a` file is in `output` dir
 - Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
