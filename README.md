@@ -2,12 +2,12 @@
 
 Stemgen is a Stem file generator. Convert any track into a Stem and have fun with Traktor.
 
-A Stem file contains a track split into four musical elements – bass, drums, vocals, and melody, for example. With each element available independently, you have more control over the music you play.
+A [Stem](https://www.native-instruments.com/en/specials/stems/) file is an open, multi-channel audio file that contains a track split into four musical elements – bass, drums, vocals, and melody, for example. With each element available independently, you have more control over the music you play.
 
 Stemgen uses `spleeter` to separate the 4 stems and `ni-stem` to create the Stem file.
 
-![Screenshot Before](./images/before.png)
-![Screenshot After](./images/after.png)
+![Screenshot Before](./screenshots/before.png)
+![Screenshot After](./screenshots/after.png)
 
 Our new file contains four stems: bass, drums, vocals and other.
 
@@ -36,8 +36,8 @@ Stems are fun but nobody's releasing them. Stemgen is a way to create your own s
 - It's working pretty well but we could use other Spleeter models with improved performances.
 - You may notice that the output file is pretty big. Apple Lossless Codec (ALAC) for audio encoding is used for lossless audio compression at the cost of increased file size.
 
-![Screenshot Input](./images/flac.png)
-![Screenshot Output](./images/alac.png)
+![Screenshot Input](./screenshots/flac.png)
+![Screenshot Output](./screenshots/alac.png)
 
 ## Disclaimer
 
