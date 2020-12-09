@@ -9,3 +9,6 @@ output/*
 
 # Spleeter
 pretrained_models/*
+
+# Demucs
+demucs/*

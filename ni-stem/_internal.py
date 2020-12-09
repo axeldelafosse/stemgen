@@ -52,7 +52,7 @@ class StemCreator:
 
         # Mutagen complains gravely if we do not explicitly convert the tag values to a
         # particular encoding. We chose UTF-8, others would work as well.
-        for key, value in self._tags.iteritems(): self._tags[key] = value.encode('utf-8')
+        for key, value in self._tags.iteritems(): self._tags[key] = repr(value).encode('utf-8')
 
         metaData = []
         if metadataFile:
