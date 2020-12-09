@@ -27,9 +27,29 @@ Stems are fun but nobody's releasing them. Stemgen is a way to create your own s
 ## Usage
 
 - Clone this repo (downloading instead of cloning loses permissions to execute files)
-- `$ ./stemgen -i track.wav`
+- `$ ./stemgen -i track.wav` or drag and drop a track on `stemgen-droplet`
 - Have fun! Your new `.stem.m4a` file is in `output` dir
 - Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
+
+## Quick install on macOS
+
+- brew install coreutils ffmpeg jo
+- pip install spleeter
+- echo "alias stemgen=/Documents/stemgen/stemgen" >> ~/.zshrc
+
+## How to use the droplet
+
+Pro tip: you can put the droplet in your dock
+
+- Drag and drop a single track, multiple tracks or a directory on the `stemgen-droplet`
+
+## How to customize and re-create the droplet
+
+I included a slightly modified version of AppleScript-droplet. You can learn more on the repo https://github.com/RichardBronosky/AppleScript-droplet
+
+- Edit `stemgen` with the OUTPUT_PATH you want for example
+- Remove `stemgen-droplet`
+- Drag and drop `stemgen` on the `script2droplet-droplet` file in Finder
 
 ## Performance
 

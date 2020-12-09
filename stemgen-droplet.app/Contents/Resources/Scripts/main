@@ -22,7 +22,7 @@ Usage: $0 -i [input_path] -o [output_path]
 
 Supported input file format: ${SUPPORTED_FILES[@]}
 "
-VERSION=1.1.0
+VERSION=1.0.1
 
 INPUT_PATH=
 OUTPUT_PATH=output
@@ -152,6 +152,7 @@ setup_file() {
     fi
 }
 
+# TODO: check if file already exists
 setup() {
     packages=('ffmpeg' 'spleeter' 'jo')
     for package in "${packages[@]}"; do
