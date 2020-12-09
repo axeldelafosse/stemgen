@@ -20,9 +20,9 @@
   },
   "version": 1,
   "stems": [
-    {"color": "#fd4a4a", "name": "Drums"},
-    {"color": "#ad65ff", "name": "Bass"},
-    {"color": "#3f8bfe", "name": "Other"},
-    {"color": "#fa8d29", "name": "Vox"}
+    { "color": "#009E73", "name": "Drums" },
+    { "color": "#D55E00", "name": "Bass" },
+    { "color": "#CC79A7", "name": "Other" },
+    { "color": "#56B4E9", "name": "Vox" }
   ]
 }
