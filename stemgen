@@ -14,6 +14,7 @@ LOGO="
 "
 
 SUPPORTED_FILES=('.wav' '.wave' '.aif' '.aiff' '.flac')
+TOLERATED_FILES=('.opus' '.ogg' '.m4a' '.stem.m4a' '.stem.mp4')
 
 USAGE="$LOGO
 Stemgen is a Stem file generator. Convert any track into a stem and have fun with Traktor.
@@ -21,6 +22,7 @@ Stemgen is a Stem file generator. Convert any track into a stem and have fun wit
 Usage: $0 -i [input_path] -o [output_path]
 
 Supported input file format: ${SUPPORTED_FILES[@]}
+Tolerated input file format: ${TOLERATED_FILES[@]}
 "
 VERSION=1.1.0
 
@@ -61,7 +63,7 @@ get_metadata() {
 convert_to_wav() {
     echo "Converting to wav..."
 
-    ffmpeg -i "$INPUT_PATH" -map_metadata 0:s:0 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -y
+    ffmpeg -i "$INPUT_PATH" -ar 44100 -map_metadata 0:s:0 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -y
 
     echo "Done."
 }
@@ -88,6 +90,7 @@ create_tags_json() {
         elif [[ $title == "artist" ]] || [[ $title == "label" ]] ||
            [[ $title == "genre" ]] || [[ $title == "release" ]] ||
            [[ $title == "comment" ]] || [[ $title == "comment2" ]] ||
+           [[ $title == "description" ]] || [[ $title == "purl" ]] ||
            [[ $title == "bpm" ]] || [[ $title == "initialkey" ]]; then
             tags+=("${title}=${value}")
         fi
@@ -204,8 +207,20 @@ setup() {
             setup_file .stem.m4a
             convert_to_wav
             ;;
+        *.m4a)
+            setup_file .m4a
+            convert_to_wav
+            ;;
+        *.opus)
+            setup_file .opus
+            convert_to_wav
+            ;;
+        *.ogg)
+            setup_file .ogg
+            convert_to_wav
+            ;;
         *)
-            echo "Invalid input file format. File should be one of:" ${SUPPORTED_FILES[@]}
+            echo "Invalid input file format. File should be one of:" ${SUPPORTED_FILES[@]} ${TOLERATED_FILES[@]}
             exit 1
             ;;
     esac
