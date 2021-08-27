@@ -51,6 +51,11 @@ I included a slightly modified version of AppleScript-droplet. You can learn mor
 - Remove `stemgen-droplet`
 - Drag and drop `stemgen` on the `script2droplet-droplet` file in Finder
 
+or
+
+- Edit `stemgen`
+- `cp stemgen stemgen-droplet.app/Contents/Resources/Scripts/main`
+
 ## Performance
 
 - It's working pretty well but we could use other Spleeter models with improved performances.
