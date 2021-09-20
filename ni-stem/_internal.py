@@ -14,6 +14,7 @@ stemDescription  = 'stem-meta'
 stemOutExtension = ".m4a"
 
 _windows = platform.system() == "Windows"
+_linux = platform.system() == "Linux"
 
 _supported_files_no_conversion = [".m4a", ".mp4", ".m4p"]
 _supported_files_conversion = [".wav", ".wave", ".aif", ".aiff", ".flac"]
@@ -34,6 +35,16 @@ def _getProgramPath():
         folderPath = os.path.dirname(folderPath)
     return folderPath
 
+def _findCmd(cmd):
+    try:
+        from shutil import which
+        return which(cmd)
+    except ImportError:
+        import os
+        for path in os.environ["PATH"].split(os.pathsep):
+            if os.access(os.path.join(path, cmd), os.X_OK):
+                return path
+    return None
 
 class StemCreator:
 
@@ -95,10 +106,10 @@ class StemCreator:
             newPath = trackName + ".m4a"
             _removeFile(newPath)
 
-            converter = os.path.join(_getProgramPath(), "avconv_win", "avconv.exe") if _windows else "afconvert"
+            converter = os.path.join(_getProgramPath(), "avconv_win", "avconv.exe") if _windows else "ffmpeg" if _linux else "afconvert"
             converterArgs = [converter]
 
-            if _windows:
+            if _windows or _linux:
                 converterArgs.extend(["-i"  , trackPath])
                 if self._format == "aac":
                     converterArgs.extend(["-b", "256k"])
@@ -131,8 +142,8 @@ class StemCreator:
         _removeFile(outputFilePath)
 
         folderName = "GPAC_win"   if _windows else "GPAC_mac"
-        executable = "mp4box.exe" if _windows else "mp4box"
-        mp4box     = os.path.join(_getProgramPath(), folderName, executable)
+        executable = "mp4box.exe" if _windows else "MP4Box" if _linux else "mp4box"
+        mp4box     = os.path.join(_findCmd(executable), executable) if _linux else os.path.join(_getProgramPath(), folderName, executable)
         
         print("\n[Done 0/6]\n")
         sys.stdout.flush()
