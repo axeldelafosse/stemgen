@@ -5,6 +5,7 @@
 ._*
 
 # Stemgen
+input/*
 output/*
 
 # Spleeter

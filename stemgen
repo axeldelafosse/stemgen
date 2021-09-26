@@ -28,6 +28,7 @@ VERSION=1.1.0
 
 INPUT_PATH=
 OUTPUT_PATH=output
+MODEL_PATH=4stems-22kHz.json
 BASE_PATH=
 FILE_NAME=
 FILE_EXTENSION=
@@ -113,7 +114,7 @@ create_tags_json() {
 split_song() {
     echo "Splitting song..."
 
-    spleeter separate "$INPUT_PATH" -p spleeter:4stems-16kHz -o "$OUTPUT_PATH"
+    spleeter separate "$INPUT_PATH" -p "$MODEL_PATH" -o "$OUTPUT_PATH"
 
     echo "Done."
 }
@@ -264,6 +265,9 @@ else
             ;;
         -i | --input)
             shift; INPUT_PATH=$1
+            ;;
+        -p | --path)
+            shift; MODEL_PATH=$1
             ;;
         -h | --help)
             echo "$USAGE"
