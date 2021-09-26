@@ -19,7 +19,7 @@ TOLERATED_FILES=('.opus' '.ogg' '.m4a' '.mp4' '.stem.m4a' '.stem.mp4')
 USAGE="$LOGO
 Stemgen is a Stem file generator. Convert any track into a stem and have fun with Traktor.
 
-Usage: $0 -i [input_path] -o [output_path] -p [model_path]
+Usage: $0 -i [input_path] -o [output_path] -p [model_path] -c [crop_cover]
 
 Supported input file format: ${SUPPORTED_FILES[@]}
 Tolerated input file format: ${TOLERATED_FILES[@]}
@@ -29,6 +29,7 @@ VERSION=1.1.0
 INPUT_PATH=
 OUTPUT_PATH=output
 MODEL_PATH=4stems-22kHz.json
+CROP_COVER=false
 BASE_PATH=
 FILE_NAME=
 FILE_EXTENSION=
@@ -49,6 +50,12 @@ get_cover() {
     echo "Extracting cover..."
 
     ffmpeg -i "$INPUT_PATH" -an -vcodec copy "$OUTPUT_PATH/$FILE_NAME/cover.jpg" -y
+
+    if [[ $CROP_COVER == true ]]; then
+        # https://legacy.imagemagick.org/Usage/thumbnails/#cut
+        convert -define jpeg:size=720x720 "$OUTPUT_PATH/$FILE_NAME/cover.jpg" -thumbnail 720x720^ -gravity center -extent 720x720 "$OUTPUT_PATH/$FILE_NAME/cover.jpg"
+        echo "Cover cropped."
+    fi
 
     echo "Done."
 }
@@ -269,6 +276,9 @@ else
             ;;
         -p | --path)
             shift; MODEL_PATH=$1
+            ;;
+        -c | --crop-cover)
+            shift; CROP_COVER=true
             ;;
         -h | --help)
             echo "$USAGE"

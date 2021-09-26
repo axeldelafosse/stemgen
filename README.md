@@ -23,6 +23,7 @@ Stems are fun but nobody's releasing them. Stemgen is a way to create your own s
 - ffmpeg https://www.ffmpeg.org (required for spleeter too)
 - ni-stem (provided in this repo or available at https://www.stems-music.com/stems-is-for-developers)
 - jo https://github.com/jpmens/jo
+- imagemagick https://imagemagick.org if you want to crop covers
 
 ## Usage
 
@@ -33,7 +34,7 @@ Stems are fun but nobody's releasing them. Stemgen is a way to create your own s
 
 ## Quick install on macOS
 
-- brew install coreutils ffmpeg jo
+- brew install coreutils ffmpeg jo imagemagick
 - pip install spleeter
 - echo "alias stemgen=/Documents/stemgen/stemgen" >> ~/.zshrc
 
