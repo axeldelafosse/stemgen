@@ -63,7 +63,7 @@ get_cover() {
 get_metadata() {
     echo "Extracting metadata..."
 
-    ffmpeg -i "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -f ffmetadata "$OUTPUT_PATH/$FILE_NAME/metadata.txt" -y
+    ffmpeg -i "$INPUT_PATH" -f ffmetadata "$OUTPUT_PATH/$FILE_NAME/metadata.txt" -y
 
     echo "Done."
 }
