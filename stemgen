@@ -13,14 +13,16 @@ LOGO="
 
 "
 
+SUPPORTED_SEPARATION_SOFTWARES=('demucs' 'spleeter')
 SUPPORTED_FILES=('.wav' '.wave' '.aif' '.aiff' '.flac')
 TOLERATED_FILES=('.opus' '.ogg' '.m4a' '.mp4' '.stem.m4a' '.stem.mp4')
 
 USAGE="$LOGO
 Stemgen is a Stem file generator. Convert any track into a stem and have fun with Traktor.
 
-Usage: $0 -i [input_path] -o [output_path] -p [model_path] -c [crop_cover]
+Usage: $0 -i [input_path] -o [output_path] -s [separation_software] -p [model_path] -c [crop_cover] 
 
+Supported separation software: ${SUPPORTED_SEPARATION_SOFTWARES[@]}
 Supported input file format: ${SUPPORTED_FILES[@]}
 Tolerated input file format: ${TOLERATED_FILES[@]}
 "
@@ -33,6 +35,7 @@ CROP_COVER=false
 BASE_PATH=
 FILE_NAME=
 FILE_EXTENSION=
+SEPARATION_SOFTWARE=demucs
 
 # From https://stackoverflow.com/a/53183593
 DIR="$(dirname "${BASH_SOURCE[0]}")" # get the directory name
@@ -122,7 +125,14 @@ create_tags_json() {
 split_song() {
     echo "Splitting song..."
 
-    spleeter separate "$INPUT_PATH" -p "$MODEL_PATH" -o "$OUTPUT_PATH"
+    if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
+        spleeter separate "$INPUT_PATH" -p "$MODEL_PATH" -o "$OUTPUT_PATH"
+    elif [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
+        python3 -m demucs -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
+    else
+        echo "Unknown separation software: $SEPARATION_SOFTWARE"
+        exit 1
+    fi
 
     echo "Done."
 }
@@ -131,7 +141,12 @@ create_stem() {
     echo "Creating stem..."
 
     cd_root
-    ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
+
+    if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
+        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
+    elif [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
+        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/mdx_extra_q/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra_q/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra_q/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra_q/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
+    fi
 
     echo "Done."
 }
@@ -165,13 +180,23 @@ setup_file() {
 }
 
 setup() {
-    packages=('ffmpeg' 'spleeter' 'jo')
+    packages=('ffmpeg' 'jo')
+    if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
+        packages+=('spleeter')
+    fi
     for package in "${packages[@]}"; do
         if [[ $(which $package) == "" ]]; then
             echo "Please install $package before running Stemgen."
             exit 2
         fi
     done
+
+    if [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
+        if [[ $(python3 -m demucs -h) == "" ]]; then
+            echo "Please install demucs before running Stemgen."
+            exit 2
+        fi
+    fi
 
     if [[ $(./ni-stem/ni-stem -h) == "" ]]; then
         echo "Please install ni-stem before running Stemgen."
@@ -279,6 +304,9 @@ else
             ;;
         -c | --crop-cover)
             shift; CROP_COVER=true
+            ;;
+        -s | --separation-software)
+            shift; SEPARATION_SOFTWARE=$1
             ;;
         -h | --help)
             echo "$USAGE"

@@ -4,7 +4,7 @@ Stemgen is a Stem file generator. Convert any track into a Stem and have fun wit
 
 A [Stem](https://www.native-instruments.com/en/specials/stems/) file is an open, multi-channel audio file that contains a track split into four musical elements – bass, drums, vocals, and melody, for example. With each element available independently, you have more control over the music you play.
 
-Stemgen uses `spleeter` to separate the 4 stems and `ni-stem` to create the Stem file.
+Stemgen uses `demucs` or `spleeter` to separate the 4 stems and `ni-stem` to create the Stem file.
 
 ![Screenshot Before](./screenshots/before.png)
 ![Screenshot After](./screenshots/after.png)
@@ -19,8 +19,8 @@ Stems are fun but nobody's releasing them. Stemgen is a way to create your own s
 
 ## Requirement
 
-- spleeter https://github.com/deezer/spleeter
-- ffmpeg https://www.ffmpeg.org (required for spleeter too)
+- demucs https://github.com/facebookresearch/demucs or spleeter https://github.com/deezer/spleeter
+- ffmpeg https://www.ffmpeg.org
 - ni-stem (provided in this repo or available at https://www.stems-music.com/stems-is-for-developers)
 - jo https://github.com/jpmens/jo
 - imagemagick https://imagemagick.org if you want to crop covers
@@ -34,9 +34,9 @@ Stems are fun but nobody's releasing them. Stemgen is a way to create your own s
 
 ## Quick install on macOS
 
-- brew install coreutils ffmpeg jo imagemagick
-- pip install spleeter
-- echo "alias stemgen=/Documents/stemgen/stemgen" >> ~/.zshrc
+- `brew install coreutils ffmpeg jo imagemagick`
+- `pip install demucs` or `pip install spleeter`
+- `echo "alias stemgen=/Documents/stemgen/stemgen" >> ~/.zshrc`
 
 ## How to use the droplet
 
