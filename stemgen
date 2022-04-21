@@ -26,7 +26,7 @@ Supported separation software: ${SUPPORTED_SEPARATION_SOFTWARES[@]}
 Supported input file format: ${SUPPORTED_FILES[@]}
 Tolerated input file format: ${TOLERATED_FILES[@]}
 "
-VERSION=1.1.0
+VERSION=2.0.0
 
 INPUT_PATH=
 OUTPUT_PATH=output
@@ -128,7 +128,7 @@ split_song() {
     if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
         spleeter separate "$INPUT_PATH" -p "$MODEL_PATH" -o "$OUTPUT_PATH"
     elif [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
-        python3 -m demucs -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
+        python3 -m demucs -n mdx_extra -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
     else
         echo "Unknown separation software: $SEPARATION_SOFTWARE"
         exit 1
@@ -145,7 +145,7 @@ create_stem() {
     if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
         ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
     elif [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
-        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/mdx_extra_q/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra_q/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra_q/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra_q/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
+        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
     fi
 
     echo "Done."
