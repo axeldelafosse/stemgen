@@ -162,33 +162,49 @@ class StemCreator:
         subprocess.check_call(callArgs)
         sys.stdout.flush()
 
+        # https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html
+        # http://www.jthink.net/jaudiotagger/tagmapping.html
+
         tags = mutagen.mp4.Open(outputFilePath)
+        # name
         if ("track" in self._tags) and (len(self._tags["track"]) > 0):
             tags["\xa9nam"] = self._tags["track"]
+        # artist
         if ("artist" in self._tags) and (len(self._tags["artist"]) > 0):
             tags["\xa9ART"] = self._tags["artist"]
+        # album
         if ("release" in self._tags) and (len(self._tags["release"]) > 0):
             tags["\xa9alb"] = self._tags["release"]
+        # remixer
         if ("remixer" in self._tags) and (len(self._tags["remixer"]) > 0):
             tags["----:com.apple.iTunes:REMIXER"] = mutagen.mp4.MP4FreeForm(self._tags["remixer"])
+        # mix
         if ("mix" in self._tags) and (len(self._tags["mix"]) > 0):
             tags["----:com.apple.iTunes:MIXER"] = mutagen.mp4.MP4FreeForm(self._tags["mix"])
+        # producer
         if ("producer" in self._tags) and (len(self._tags["producer"]) > 0):
             tags["----:com.apple.iTunes:PRODUCER"] = self._tags["producer"]
+        # label
         if ("label" in self._tags) and (len(self._tags["label"]) > 0):
             tags["----:com.apple.iTunes:LABEL"] = mutagen.mp4.MP4FreeForm(self._tags["label"])
+        # genre
         if ("genre" in self._tags) and (len(self._tags["genre"]) > 0):
             tags["\xa9gen"] = self._tags["genre"]
+        # trkn
         if ("track_no" in self._tags) and (len(self._tags["track_no"]) > 0):
             if ("track_count" in self._tags) and (len(self._tags["track_count"]) > 0):
                 tags["trkn"] = [(int(self._tags["track_no"]), int(self._tags["track_count"]))] #self._tags["track_no"]
+        # catalog number
         if ("catalog_no" in self._tags) and (len(self._tags["catalog_no"]) > 0):
             tags["----:com.apple.iTunes:CATALOGNUMBER"] = mutagen.mp4.MP4FreeForm(self._tags["catalog_no"])
+        # date
         if ("year" in self._tags) and (len(self._tags["year"]) > 0):
             tags["\xa9day"] = self._tags["year"]
+        # isrc
         if ("isrc" in self._tags) and (len(self._tags["isrc"]) > 0):
             tags["TSRC"] = mutagen.id3.TSRC(encoding=None, text=self._tags["isrc"])
             tags["----:com.apple.iTunes:ISRC"] = mutagen.mp4.MP4FreeForm(self._tags["isrc"])
+        # cover
         if ("cover" in self._tags) and (len(self._tags["cover"]) > 0):
             coverPath = self._tags["cover"]
             f = urllib.urlopen(coverPath)
@@ -197,6 +213,54 @@ class StemCreator:
               mutagen.mp4.MP4Cover.FORMAT_JPEG
             )]
             f.close()
+        # description
+        if ("description" in self._tags) and (len(self._tags["description"]) > 0):
+            tags["\xa9cmt"] = self._tags["description"]
+        # comment
+        if ("comment" in self._tags) and (len(self._tags["comment"]) > 0):
+            tags["\xa9cmt"] = self._tags["comment"]
+        # bpm
+        if ("bpm" in self._tags) and (len(self._tags["bpm"]) > 0):
+            tags["tmpo"] = mutagen.id3.TMPO(encoding=None, text=self._tags["bpm"])
+        # initial key
+        if ("initialkey" in self._tags) and (len(self._tags["initialkey"]) > 0):
+            tags["----:com.apple.iTunes:initialkey"] = mutagen.mp4.MP4FreeForm(self._tags["initialkey"])
+        # key
+        if ("key" in self._tags) and (len(self._tags["key"]) > 0):
+            tags["----:com.apple.iTunes:KEY"] = mutagen.mp4.MP4FreeForm(self._tags["key"])
+        # title
+        if ("title" in self._tags) and (len(self._tags["title"]) > 0):
+            tags["\xa9nam"] = self._tags["title"]
+        # album
+        if ("album" in self._tags) and (len(self._tags["album"]) > 0):
+            tags["\xa9alb"] = self._tags["album"]
+        # style
+        if ("style" in self._tags) and (len(self._tags["style"]) > 0):
+            tags["\xa9gen"] = self._tags["style"]
+        # mood
+        if ("mood" in self._tags) and (len(self._tags["mood"]) > 0):
+            tags["----:com.apple.iTunes:MOOD"] = mutagen.mp4.MP4FreeForm(self._tags["mood"])
+        # group
+        if ("group" in self._tags) and (len(self._tags["group"]) > 0):
+            tags["\xa9grp"] = self._tags["group"]
+        # composer
+        if ("composer" in self._tags) and (len(self._tags["composer"]) > 0):
+            tags["\xa9wrt"] = self._tags["composer"]
+        # barcode
+        if ("barcode" in self._tags) and (len(self._tags["barcode"]) > 0):
+            tags["----:com.apple.iTunes:BARCODE"] = self._tags["barcode"]
+        # url_discogs_artist_site
+        if ("url_discogs_artist_site" in self._tags) and (len(self._tags["url_discogs_artist_site"]) > 0):
+            tags["----:com.apple.iTunes:URL_DISCOGS_ARTIST_SITE"] = self._tags["url_discogs_artist_site"]
+        # url_discogs_release_site
+        if ("url_discogs_release_site" in self._tags) and (len(self._tags["url_discogs_release_site"]) > 0):
+            tags["----:com.apple.iTunes:URL_DISCOGS_RELEASE_SITE"] = self._tags["url_discogs_release_site"]
+        # youtube_id
+        if ("youtube_id" in self._tags) and (len(self._tags["youtube_id"]) > 0):
+            tags["----:com.apple.iTunes:YouTube Id"] = self._tags["youtube_id"]
+        # beatport_id
+        if ("beatport_id" in self._tags) and (len(self._tags["beatport_id"]) > 0):
+            tags["----:com.apple.iTunes:Beatport Id"] = self._tags["beatport_id"]
 
         tags["TAUT"] = "STEM"
         tags.save(outputFilePath)

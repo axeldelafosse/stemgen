@@ -79,6 +79,7 @@ convert_to_wav() {
     echo "Done."
 }
 
+# TODO: handle multilines metadata
 create_tags_json() {
     echo "Creating tags.json..."
 
@@ -91,19 +92,24 @@ create_tags_json() {
     local tags=()
 
     # Add metadata, e.g. `artist` `genre`
-    while IFS=$'\n' read tag; do
+    while read -r tag; do
         title=${tag%%=*}
+        value=${tag##"$title="}
         title=$(echo "$title" | awk '{ print tolower($0) }')
-        value=${tag##*=}
-        if [[ $title == "title" ]]; then
-            # Add meta `title` as `track` for `ni-stem`
-            tags+=("track=${value}")
-        elif [[ $title == "artist" ]] || [[ $title == "label" ]] ||
-            [[ $title == "album" ]] || [[ $title == "release" ]] ||
-            [[ $title == "genre" ]] || [[ $title == "style" ]] ||
-            [[ $title == "comment" ]] || [[ $title == "comment2" ]] ||
-            [[ $title == "description" ]] || [[ $title == "purl" ]] ||
-            [[ $title == "bpm" ]] || [[ $title == "initialkey" ]]; then
+        if [[ $title == "title" ]] || [[ $title == "style" ]] ||
+            [[ $title == "artist" ]] || [[ $title == "label" ]] ||
+            [[ $title == "release" ]] || [[ $title == "album" ]] ||
+            [[ $title == "remixer" ]] || [[ $title == "mix" ]] ||
+            [[ $title == "producer" ]] || [[ $title == "bpm" ]] ||
+            [[ $title == "genre" ]] || [[ $title == "catalog_no" ]] ||
+            [[ $title == "track_no" ]] || [[ $title == "track_count" ]] ||
+            [[ $title == "year" ]] || [[ $title == "isrc" ]] ||
+            [[ $title == "comment" ]] || [[ $title == "description" ]] ||
+            [[ $title == "url_discogs_artist_site" ]] ||
+            [[ $title == "url_discogs_release_site" ]] ||
+            [[ $title == "youtube_id" ]] || [[ $title == "beatport_id" ]] ||
+            [[ $title == "initialkey" ]] || [[ $title == "key" ]] ||
+            [[ $title == "barcode" ]]; then
         tags+=("${title}=${value}")
         fi
     done < metadata.txt
@@ -113,9 +119,9 @@ create_tags_json() {
         tags+=("cover=file://${path}/cover.jpg")
     fi
 
-    echo ${tags[@]}
-
     jo -p -- "${tags[@]:-}" > tags.json
+
+    cat tags.json
 
     cd ../../
 
