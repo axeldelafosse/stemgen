@@ -213,9 +213,9 @@ class StemCreator:
               mutagen.mp4.MP4Cover.FORMAT_JPEG
             )]
             f.close()
-        # description
+        # description (long description)
         if ("description" in self._tags) and (len(self._tags["description"]) > 0):
-            tags["\xa9cmt"] = self._tags["description"]
+            tags["ldes"] = self._tags["description"]
         # comment
         if ("comment" in self._tags) and (len(self._tags["comment"]) > 0):
             tags["\xa9cmt"] = self._tags["comment"]
