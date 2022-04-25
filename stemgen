@@ -109,7 +109,7 @@ create_tags_json() {
             [[ $title == "url_discogs_release_site" ]] ||
             [[ $title == "youtube_id" ]] || [[ $title == "beatport_id" ]] ||
             [[ $title == "initialkey" ]] || [[ $title == "key" ]] ||
-            [[ $title == "barcode" ]]; then
+            [[ $title == "barcode" ]] || [[ $title == "mood" ]]; then
         tags+=("${title}=${value}")
         fi
     done < metadata.txt
