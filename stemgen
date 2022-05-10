@@ -203,9 +203,9 @@ create_stem() {
     cd_root
 
     if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
-        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac -b "$BIT_DEPTH"
+        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
     elif [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
-        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac -b "$BIT_DEPTH"
+        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
     fi
 
     echo "Done."

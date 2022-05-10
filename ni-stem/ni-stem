@@ -19,7 +19,6 @@ parserCreate.add_argument("-m", "--metadata",  dest="metadata",          help="J
 parserCreate.add_argument("-o", "--output",    dest="output",            help="output file")
 parserCreate.add_argument("-f", "--format",    dest="format",            help="output file format")
 parserCreate.add_argument("-t", "--tags",      dest="tags",              help="tags as json")
-parserCreate.add_argument("-b", "--bit-depth", dest="bit_depth",         help="bits per sample")
 parserCreate.set_defaults(func=_create)
 
 def _view(args):

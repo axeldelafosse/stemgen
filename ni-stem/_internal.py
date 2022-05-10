@@ -55,7 +55,7 @@ class StemCreator:
         {"name": "Vox" , "color" : "#56B4E9"}
     ]
 
-    def __init__(self, mixdownTrack, stemTracks, fileFormat, metadataFile = None, tags = None, bitDepth = 0):
+    def __init__(self, mixdownTrack, stemTracks, fileFormat, metadataFile = None, tags = None):
         self._mixdownTrack = mixdownTrack
         self._stemTracks   = stemTracks
         self._format       = fileFormat if fileFormat else "alac"
@@ -113,9 +113,6 @@ class StemCreator:
                 converterArgs.extend(["-i"  , trackPath])
                 if self._format == "aac":
                     converterArgs.extend(["-b", "256k"])
-                elif self._format == "alac":
-                    # Use `alac_at` to convert to ALAC with AudioToolbox
-                    converterArgs.extend(["-c:a", self._format if _windows else self._format + "_at"])
                 else:
                     converterArgs.extend(["-c:a", self._format])
             else:
