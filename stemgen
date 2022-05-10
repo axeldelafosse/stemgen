@@ -23,10 +23,10 @@ Stemgen is a Stem file generator. Convert any track into a stem and have fun wit
 Usage: $0 -i [input_path] -o [output_path] -s [separation_software] -p [model_path] -c [crop_cover] 
 
 Supported separation software: ${SUPPORTED_SEPARATION_SOFTWARES[@]}
-Supported input file format: ${SUPPORTED_FILES[@]}
+Supported (lossless) input file format: ${SUPPORTED_FILES[@]}
 Tolerated input file format: ${TOLERATED_FILES[@]}
 "
-VERSION=2.0.0
+VERSION=3.0.0
 
 INPUT_PATH=
 OUTPUT_PATH=output
@@ -36,6 +36,7 @@ BASE_PATH=
 FILE_NAME=
 FILE_EXTENSION=
 SEPARATION_SOFTWARE=demucs
+BIT_DEPTH=0
 
 # From https://stackoverflow.com/a/53183593
 DIR="$(dirname "${BASH_SOURCE[0]}")" # get the directory name
@@ -71,10 +72,57 @@ get_metadata() {
     echo "Done."
 }
 
+get_bit_depth() {
+    echo "Extracting bit depth..."
+
+    if [[ $FILE_EXTENSION == '.flac' ]]; then
+        BIT_DEPTH=$(ffprobe -show_streams -select_streams a "$INPUT_PATH" | grep bits_per_raw_sample= | sed 's/bits_per_raw_sample=//')
+    else
+        BIT_DEPTH=$(ffprobe -show_streams -select_streams a "$INPUT_PATH" | grep bits_per_sample= | sed 's/bits_per_sample=//')
+    fi
+
+    if [[ $BIT_DEPTH == 'N/A' ]]; then
+        BIT_DEPTH=0
+    fi
+
+    echo "bits_per_sample=$BIT_DEPTH"
+
+    echo "Done."
+}
+
 convert_to_wav() {
     echo "Converting to wav..."
 
-    ffmpeg -i "$INPUT_PATH" -ar 44100 -map_metadata 0:s:0 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -y
+    # We downsample to 44.1kHz to avoid problems with the separation software
+    # because the models are trained on 44.1kHz audio files
+
+    if [[ $FILE_EXTENSION == '.aif' ]] || [[ $FILE_EXTENSION == '.aiff' ]] || [[ $FILE_EXTENSION == '.flac' ]]; then
+        if [[ $BIT_DEPTH == '32' ]]; then
+            # Downconvert to 24-bit
+            sox "$INPUT_PATH" --show-progress --no-dither -r 44100 -b 24 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
+            BIT_DEPTH=24
+        else
+            sox "$INPUT_PATH" --show-progress --no-dither -r 44100 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
+        fi
+    else
+        # Note that we shouldn't have bit depth with the lossy files format
+        # but this logic is here if you want to use ffmpeg instead of sox
+
+        # The default ffmpeg behavior is to downsample wav files to 16-bit audio
+        # so let's convert and dither with soxr instead for better quality
+
+        CMD=""
+        OPTION=""
+        if [[ $BIT_DEPTH == 0 ]] || [[ $BIT_DEPTH == 16 ]]; then
+            CMD="-ar"
+            OPTION="44100"
+        elif [[ $BIT_DEPTH == 24 ]] || [[ $BIT_DEPTH == 32 ]]; then
+            CMD="-af"
+            OPTION="aresample=44100:resampler=soxr:precision=33:osf=s16:dither_method=triangular"
+        fi
+
+        ffmpeg -i "$INPUT_PATH" "$CMD" "$OPTION" -map_metadata 0:s:0 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -y
+    fi
 
     echo "Done."
 }
@@ -108,8 +156,10 @@ create_tags_json() {
             [[ $title == "url_discogs_artist_site" ]] ||
             [[ $title == "url_discogs_release_site" ]] ||
             [[ $title == "youtube_id" ]] || [[ $title == "beatport_id" ]] ||
+            [[ $title == "qobuz_id" ]] || [[ $title == "copyright" ]] ||
             [[ $title == "initialkey" ]] || [[ $title == "key" ]] ||
-            [[ $title == "barcode" ]] || [[ $title == "mood" ]]; then
+            [[ $title == "barcode" ]] || [[ $title == "upc" ]] ||
+            [[ $title == "lyrics" ]] || [[ $title == "mood" ]]; then
         tags+=("${title}=${value}")
         fi
     done < metadata.txt
@@ -134,7 +184,11 @@ split_song() {
     if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
         spleeter separate "$INPUT_PATH" -p "$MODEL_PATH" -o "$OUTPUT_PATH"
     elif [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
-        python3 -m demucs -n mdx_extra -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
+        if [[ $BIT_DEPTH == 24 ]]; then
+            python3 -m demucs --int24 -n mdx_extra -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
+        else
+            python3 -m demucs -n mdx_extra -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
+        fi
     else
         echo "Unknown separation software: $SEPARATION_SOFTWARE"
         exit 1
@@ -149,9 +203,9 @@ create_stem() {
     cd_root
 
     if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
-        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
+        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac -b "$BIT_DEPTH"
     elif [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
-        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
+        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac -b "$BIT_DEPTH"
     fi
 
     echo "Done."
@@ -186,7 +240,7 @@ setup_file() {
 }
 
 setup() {
-    packages=('ffmpeg' 'jo')
+    packages=('ffmpeg' 'sox' 'jo')
     if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
         packages+=('spleeter')
     fi
@@ -273,6 +327,7 @@ run() {
 
     get_cover
     get_metadata
+    get_bit_depth
     create_tags_json
     split_song
     create_stem

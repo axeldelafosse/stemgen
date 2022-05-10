@@ -1,13 +1,26 @@
+# -*- coding: utf-8 -*-
 # Copyright (C) 2005  Michael Urman
 #               2013  Christoph Reiter
 #               2014  Ben Ockmore
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of version 2 of the GNU General Public License as
-# published by the Free Software Foundation.
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 
-from .._compat import long_, integer_types
-from .._util import MutagenError
+from mutagen._util import MutagenError
+
+
+def is_valid_frame_id(frame_id):
+    return frame_id.isalnum() and frame_id.isupper()
+
+
+class ID3SaveConfig(object):
+
+    def __init__(self, v2_version=4, v23_separator=None):
+        assert v2_version in (3, 4)
+        self.v2_version = v2_version
+        self.v23_separator = v23_separator
 
 
 class error(MutagenError):
@@ -15,18 +28,6 @@ class error(MutagenError):
 
 
 class ID3NoHeaderError(error, ValueError):
-    pass
-
-
-class ID3BadUnsynchData(error, ValueError):
-    pass
-
-
-class ID3BadCompressedData(error, ValueError):
-    pass
-
-
-class ID3TagError(error, ValueError):
     pass
 
 
@@ -38,11 +39,7 @@ class ID3EncryptionUnsupportedError(error, NotImplementedError):
     pass
 
 
-class ID3JunkFrameError(error, ValueError):
-    pass
-
-
-class ID3Warning(error, UserWarning):
+class ID3JunkFrameError(error):
     pass
 
 
@@ -112,7 +109,7 @@ class _BitPaddedMixin(object):
 
         mask = (((1 << (8 - bits)) - 1) << bits)
 
-        if isinstance(value, integer_types):
+        if isinstance(value, int):
             while value:
                 if value & mask:
                     return False
@@ -135,7 +132,9 @@ class BitPaddedInt(int, _BitPaddedMixin):
         numeric_value = 0
         shift = 0
 
-        if isinstance(value, integer_types):
+        if isinstance(value, int):
+            if value < 0:
+                raise ValueError
             while value:
                 numeric_value += (value & mask) << shift
                 value >>= 8
@@ -149,15 +148,24 @@ class BitPaddedInt(int, _BitPaddedMixin):
         else:
             raise TypeError
 
-        if isinstance(numeric_value, int):
-            self = int.__new__(BitPaddedInt, numeric_value)
-        else:
-            self = long_.__new__(BitPaddedLong, numeric_value)
+        self = int.__new__(BitPaddedInt, numeric_value)
 
         self.bits = bits
         self.bigendian = bigendian
         return self
 
 
-class BitPaddedLong(long_, _BitPaddedMixin):
-    pass
+class ID3BadUnsynchData(error, ValueError):
+    """Deprecated"""
+
+
+class ID3BadCompressedData(error, ValueError):
+    """Deprecated"""
+
+
+class ID3TagError(error, ValueError):
+    """Deprecated"""
+
+
+class ID3Warning(error, UserWarning):
+    """Deprecated"""

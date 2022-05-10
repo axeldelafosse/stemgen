@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 
@@ -9,7 +9,7 @@ subparsers = parser.add_subparsers()
 
 def _create(args):
 
-    creator = _internal.StemCreator(args.mixdown, args.stems, args.format, args.metadata, args.tags)
+    creator = _internal.StemCreator(args.mixdown, args.stems, args.format, args.metadata, args.tags, args.bit_depth)
     creator.save(args.output)
 
 parserCreate = subparsers.add_parser("create", help="Create a STEM container file.")
@@ -19,6 +19,7 @@ parserCreate.add_argument("-m", "--metadata",  dest="metadata",          help="J
 parserCreate.add_argument("-o", "--output",    dest="output",            help="output file")
 parserCreate.add_argument("-f", "--format",    dest="format",            help="output file format")
 parserCreate.add_argument("-t", "--tags",      dest="tags",              help="tags as json")
+parserCreate.add_argument("-b", "--bit-depth", dest="bit_depth",         help="bits per sample")
 parserCreate.set_defaults(func=_create)
 
 def _view(args):
@@ -36,4 +37,4 @@ args = parser.parse_args()
 try:
     args.func(args)
 except Exception as e:
-    print e
+    print(e)

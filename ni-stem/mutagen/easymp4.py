@@ -1,13 +1,14 @@
-# Copyright 2009 Joe Wreschnig
+# -*- coding: utf-8 -*-
+# Copyright (C) 2009  Joe Wreschnig
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of version 2 of the GNU General Public License as
-# published by the Free Software Foundation.
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 
-from mutagen import Metadata
+from mutagen import Tags
 from mutagen._util import DictMixin, dict_match
 from mutagen.mp4 import MP4, MP4Tags, error, delete
-from ._compat import PY2, text_type, PY3
 
 
 __all__ = ["EasyMP4Tags", "EasyMP4", "delete", "error"]
@@ -17,8 +18,10 @@ class EasyMP4KeyError(error, KeyError, ValueError):
     pass
 
 
-class EasyMP4Tags(DictMixin, Metadata):
-    """A file with MPEG-4 iTunes metadata.
+class EasyMP4Tags(DictMixin, Tags):
+    """EasyMP4Tags()
+
+    A file with MPEG-4 iTunes metadata.
 
     Like Vorbis comments, EasyMP4Tags keys are case-insensitive ASCII
     strings, and values are a list of Unicode strings (and these lists
@@ -41,6 +44,10 @@ class EasyMP4Tags(DictMixin, Metadata):
 
     filename = property(lambda s: s.__mp4.filename,
                         lambda s, fn: setattr(s.__mp4, 'filename', fn))
+
+    @property
+    def _padding(self):
+        return self.__mp4._padding
 
     @classmethod
     def RegisterKey(cls, key,
@@ -93,16 +100,16 @@ class EasyMP4Tags(DictMixin, Metadata):
         cls.RegisterKey(key, getter, setter, deleter)
 
     @classmethod
-    def RegisterIntKey(cls, key, atomid, min_value=0, max_value=2 ** 16 - 1):
+    def RegisterIntKey(cls, key, atomid, min_value=0, max_value=(2 ** 16) - 1):
         """Register a scalar integer key.
         """
 
         def getter(tags, key):
-            return list(map(text_type, tags[atomid]))
+            return list(map(str, tags[atomid]))
 
         def setter(tags, key, value):
             clamp = lambda x: int(min(max(min_value, x), max_value))
-            tags[atomid] = list(map(clamp, map(int, value)))
+            tags[atomid] = [clamp(v) for v in map(int, value)]
 
         def deleter(tags, key):
             del(tags[atomid])
@@ -111,14 +118,14 @@ class EasyMP4Tags(DictMixin, Metadata):
 
     @classmethod
     def RegisterIntPairKey(cls, key, atomid, min_value=0,
-                           max_value=2 ** 16 - 1):
+                           max_value=(2 ** 16) - 1):
         def getter(tags, key):
             ret = []
             for (track, total) in tags[atomid]:
                 if total:
                     ret.append(u"%d/%d" % (track, total))
                 else:
-                    ret.append(text_type(track))
+                    ret.append(str(track))
             return ret
 
         def setter(tags, key, value):
@@ -159,10 +166,8 @@ class EasyMP4Tags(DictMixin, Metadata):
         def setter(tags, key, value):
             encoded = []
             for v in value:
-                if not isinstance(v, text_type):
-                    if PY3:
-                        raise TypeError("%r not str" % v)
-                    v = v.decode("utf-8")
+                if not isinstance(v, str):
+                    raise TypeError("%r not str" % v)
                 encoded.append(v.encode("utf-8"))
             tags[atomid] = encoded
 
@@ -182,12 +187,8 @@ class EasyMP4Tags(DictMixin, Metadata):
     def __setitem__(self, key, value):
         key = key.lower()
 
-        if PY2:
-            if isinstance(value, basestring):
-                value = [value]
-        else:
-            if isinstance(value, text_type):
-                value = [value]
+        if isinstance(value, str):
+            value = [value]
 
         func = dict_match(self.Set, key)
         if func is not None:
@@ -265,11 +266,14 @@ for name, key in {
 
 
 class EasyMP4(MP4):
-    """Like :class:`MP4 <mutagen.mp4.MP4>`,
-    but uses :class:`EasyMP4Tags` for tags.
+    """EasyMP4(filelike)
 
-    :ivar info: :class:`MP4Info <mutagen.mp4.MP4Info>`
-    :ivar tags: :class:`EasyMP4Tags`
+    Like :class:`MP4 <mutagen.mp4.MP4>`, but uses :class:`EasyMP4Tags` for
+    tags.
+
+    Attributes:
+        info (`mutagen.mp4.MP4Info`)
+        tags (`EasyMP4Tags`)
     """
 
     MP4Tags = EasyMP4Tags
