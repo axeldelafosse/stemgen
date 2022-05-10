@@ -1,9 +1,9 @@
 {
   "mastering_dsp": {
     "compressor": {
+      "enabled": false,
       "ratio": 3,
       "output_gain": 0.5,
-      "enabled": true,
       "release": 0.300000011920929,
       "attack": 0.003000000026077032,
       "input_gain": 0.5,
@@ -12,17 +12,17 @@
       "dry_wet": 50
     },
     "limiter": {
+      "enabled": false,
       "release": 0.05000000074505806,
       "threshold": 0,
-      "ceiling": -0.3499999940395355,
-      "enabled": true
+      "ceiling": -0.3499999940395355
     }
   },
   "version": 1,
   "stems": [
-    { "color": "#009E73", "name": "Drums" },
-    { "color": "#D55E00", "name": "Bass" },
-    { "color": "#CC79A7", "name": "Other" },
-    { "color": "#56B4E9", "name": "Vox" }
+    {"color": "#009E73", "name": "Drums"},
+    {"color": "#D55E00", "name": "Bass"},
+    {"color": "#CC79A7", "name": "Other"},
+    {"color": "#56B4E9", "name": "Vox"}
   ]
 }
