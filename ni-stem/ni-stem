@@ -9,7 +9,7 @@ subparsers = parser.add_subparsers()
 
 def _create(args):
 
-    creator = _internal.StemCreator(args.mixdown, args.stems, args.format, args.metadata, args.tags, args.bit_depth)
+    creator = _internal.StemCreator(args.mixdown, args.stems, args.format, args.metadata, args.tags)
     creator.save(args.output)
 
 parserCreate = subparsers.add_parser("create", help="Create a STEM container file.")
