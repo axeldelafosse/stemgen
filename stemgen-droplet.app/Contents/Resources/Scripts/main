@@ -13,24 +13,30 @@ LOGO="
 
 "
 
+SUPPORTED_SEPARATION_SOFTWARES=('demucs' 'spleeter')
 SUPPORTED_FILES=('.wav' '.wave' '.aif' '.aiff' '.flac')
 TOLERATED_FILES=('.opus' '.ogg' '.m4a' '.mp4' '.stem.m4a' '.stem.mp4')
 
 USAGE="$LOGO
 Stemgen is a Stem file generator. Convert any track into a stem and have fun with Traktor.
 
-Usage: $0 -i [input_path] -o [output_path]
+Usage: $0 -i [input_path] -o [output_path] -s [separation_software] -p [model_path] -c [crop_cover] 
 
-Supported input file format: ${SUPPORTED_FILES[@]}
+Supported separation software: ${SUPPORTED_SEPARATION_SOFTWARES[@]}
+Supported (lossless) input file format: ${SUPPORTED_FILES[@]}
 Tolerated input file format: ${TOLERATED_FILES[@]}
 "
-VERSION=1.1.0
+VERSION=3.0.0
 
 INPUT_PATH=
 OUTPUT_PATH=output
+MODEL_PATH=4stems-22kHz.json
+CROP_COVER=false
 BASE_PATH=
 FILE_NAME=
 FILE_EXTENSION=
+SEPARATION_SOFTWARE=demucs
+BIT_DEPTH=0
 
 # From https://stackoverflow.com/a/53183593
 DIR="$(dirname "${BASH_SOURCE[0]}")" # get the directory name
@@ -49,6 +55,12 @@ get_cover() {
 
     ffmpeg -i "$INPUT_PATH" -an -vcodec copy "$OUTPUT_PATH/$FILE_NAME/cover.jpg" -y
 
+    if [[ $CROP_COVER == true ]]; then
+        # https://legacy.imagemagick.org/Usage/thumbnails/#cut
+        convert -define jpeg:size=720x720 "$OUTPUT_PATH/$FILE_NAME/cover.jpg" -thumbnail 720x720^ -gravity center -extent 720x720 "$OUTPUT_PATH/$FILE_NAME/cover.jpg"
+        echo "Cover cropped."
+    fi
+
     echo "Done."
 }
 
@@ -60,14 +72,62 @@ get_metadata() {
     echo "Done."
 }
 
-convert_to_wav() {
-    echo "Converting to wav..."
+get_bit_depth() {
+    echo "Extracting bit depth..."
 
-    ffmpeg -i "$INPUT_PATH" -ar 44100 -map_metadata 0:s:0 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -y
+    if [[ $FILE_EXTENSION == '.flac' ]]; then
+        BIT_DEPTH=$(ffprobe -show_streams -select_streams a "$INPUT_PATH" | grep bits_per_raw_sample= | sed 's/bits_per_raw_sample=//')
+    else
+        BIT_DEPTH=$(ffprobe -show_streams -select_streams a "$INPUT_PATH" | grep bits_per_sample= | sed 's/bits_per_sample=//')
+    fi
+
+    if [[ $BIT_DEPTH == 'N/A' ]]; then
+        BIT_DEPTH=0
+    fi
+
+    echo "bits_per_sample=$BIT_DEPTH"
 
     echo "Done."
 }
 
+convert_to_wav() {
+    echo "Converting to wav..."
+
+    # We downsample to 44.1kHz to avoid problems with the separation software
+    # because the models are trained on 44.1kHz audio files
+
+    if [[ $FILE_EXTENSION == '.aif' ]] || [[ $FILE_EXTENSION == '.aiff' ]] || [[ $FILE_EXTENSION == '.flac' ]]; then
+        if [[ $BIT_DEPTH == '32' ]]; then
+            # Downconvert to 24-bit
+            sox "$INPUT_PATH" --show-progress --no-dither -r 44100 -b 24 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
+            BIT_DEPTH=24
+        else
+            sox "$INPUT_PATH" --show-progress --no-dither -r 44100 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
+        fi
+    else
+        # Note that we shouldn't have bit depth with the lossy files format
+        # but this logic is here if you want to use ffmpeg instead of sox
+
+        # The default ffmpeg behavior is to downsample wav files to 16-bit audio
+        # so let's convert and dither with soxr instead for better quality
+
+        CMD=""
+        OPTION=""
+        if [[ $BIT_DEPTH == 0 ]] || [[ $BIT_DEPTH == 16 ]]; then
+            CMD="-ar"
+            OPTION="44100"
+        elif [[ $BIT_DEPTH == 24 ]] || [[ $BIT_DEPTH == 32 ]]; then
+            CMD="-af"
+            OPTION="aresample=44100:resampler=soxr:precision=33:osf=s16:dither_method=triangular"
+        fi
+
+        ffmpeg -i "$INPUT_PATH" "$CMD" "$OPTION" -map_metadata 0:s:0 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -y
+    fi
+
+    echo "Done."
+}
+
+# TODO: handle multilines metadata
 create_tags_json() {
     echo "Creating tags.json..."
 
@@ -80,19 +140,27 @@ create_tags_json() {
     local tags=()
 
     # Add metadata, e.g. `artist` `genre`
-    while IFS=$'\n' read tag; do
+    while read -r tag; do
         title=${tag%%=*}
+        value=${tag##"$title="}
         title=$(echo "$title" | awk '{ print tolower($0) }')
-        value=${tag##*=}
-        if [[ $title == "title" ]]; then
-            # Add meta `title` as `track` for `ni-stem`
-            tags+=("track=${value}")
-        elif [[ $title == "artist" ]] || [[ $title == "label" ]] ||
-           [[ $title == "genre" ]] || [[ $title == "release" ]] ||
-           [[ $title == "comment" ]] || [[ $title == "comment2" ]] ||
-           [[ $title == "description" ]] || [[ $title == "purl" ]] ||
-           [[ $title == "bpm" ]] || [[ $title == "initialkey" ]]; then
-            tags+=("${title}=${value}")
+        if [[ $title == "title" ]] || [[ $title == "style" ]] ||
+            [[ $title == "artist" ]] || [[ $title == "label" ]] ||
+            [[ $title == "release" ]] || [[ $title == "album" ]] ||
+            [[ $title == "remixer" ]] || [[ $title == "mix" ]] ||
+            [[ $title == "producer" ]] || [[ $title == "bpm" ]] ||
+            [[ $title == "genre" ]] || [[ $title == "catalog_no" ]] ||
+            [[ $title == "track_no" ]] || [[ $title == "track_count" ]] ||
+            [[ $title == "year" ]] || [[ $title == "isrc" ]] ||
+            [[ $title == "comment" ]] || [[ $title == "description" ]] ||
+            [[ $title == "url_discogs_artist_site" ]] ||
+            [[ $title == "url_discogs_release_site" ]] ||
+            [[ $title == "youtube_id" ]] || [[ $title == "beatport_id" ]] ||
+            [[ $title == "qobuz_id" ]] || [[ $title == "copyright" ]] ||
+            [[ $title == "initialkey" ]] || [[ $title == "key" ]] ||
+            [[ $title == "barcode" ]] || [[ $title == "upc" ]] ||
+            [[ $title == "lyrics" ]] || [[ $title == "mood" ]]; then
+        tags+=("${title}=${value}")
         fi
     done < metadata.txt
 
@@ -101,9 +169,9 @@ create_tags_json() {
         tags+=("cover=file://${path}/cover.jpg")
     fi
 
-    echo ${tags[@]}
-
     jo -p -- "${tags[@]:-}" > tags.json
+
+    cat tags.json
 
     cd ../../
 
@@ -113,7 +181,18 @@ create_tags_json() {
 split_song() {
     echo "Splitting song..."
 
-    spleeter separate "$INPUT_PATH" -p spleeter:4stems-16kHz -o "$OUTPUT_PATH"
+    if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
+        spleeter separate "$INPUT_PATH" -p "$MODEL_PATH" -o "$OUTPUT_PATH"
+    elif [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
+        if [[ $BIT_DEPTH == 24 ]]; then
+            python3 -m demucs --int24 -n mdx_extra -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
+        else
+            python3 -m demucs -n mdx_extra -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
+        fi
+    else
+        echo "Unknown separation software: $SEPARATION_SOFTWARE"
+        exit 1
+    fi
 
     echo "Done."
 }
@@ -122,7 +201,12 @@ create_stem() {
     echo "Creating stem..."
 
     cd_root
-    ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
+
+    if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
+        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
+    elif [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
+        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
+    fi
 
     echo "Done."
 }
@@ -156,13 +240,23 @@ setup_file() {
 }
 
 setup() {
-    packages=('ffmpeg' 'spleeter' 'jo')
+    packages=('ffmpeg' 'sox' 'jo')
+    if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
+        packages+=('spleeter')
+    fi
     for package in "${packages[@]}"; do
         if [[ $(which $package) == "" ]]; then
             echo "Please install $package before running Stemgen."
             exit 2
         fi
     done
+
+    if [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
+        if [[ $(python3 -m demucs -h) == "" ]]; then
+            echo "Please install demucs before running Stemgen."
+            exit 2
+        fi
+    fi
 
     if [[ $(./ni-stem/ni-stem -h) == "" ]]; then
         echo "Please install ni-stem before running Stemgen."
@@ -233,6 +327,7 @@ run() {
 
     get_cover
     get_metadata
+    get_bit_depth
     create_tags_json
     split_song
     create_stem
@@ -264,6 +359,15 @@ else
             ;;
         -i | --input)
             shift; INPUT_PATH=$1
+            ;;
+        -p | --path)
+            shift; MODEL_PATH=$1
+            ;;
+        -c | --crop-cover)
+            shift; CROP_COVER=true
+            ;;
+        -s | --separation-software)
+            shift; SEPARATION_SOFTWARE=$1
             ;;
         -h | --help)
             echo "$USAGE"
