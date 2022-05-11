@@ -143,7 +143,7 @@ class StemCreator:
 
         folderName = "GPAC_win"   if _windows else "GPAC_mac"
         executable = "mp4box.exe" if _windows else "MP4Box"
-        mp4box     = os.path.join(_findCmd(executable), executable) if _linux else os.path.join(_getProgramPath(), folderName, executable)
+        mp4box     = _findCmd(executable) if _linux else os.path.join(_getProgramPath(), folderName, executable)
         
         print("\n[Done 0/6]\n")
         sys.stdout.flush()
@@ -295,7 +295,7 @@ class StemMetadataViewer:
         if stemFile:
             folderName = "GPAC_win"   if _windows else "GPAC_mac"
             executable = "mp4box.exe" if _windows else "MP4Box"
-            mp4box     = os.path.join(_getProgramPath(), folderName, executable)
+            mp4box     = _findCmd(executable) if _linux else os.path.join(_getProgramPath(), folderName, executable)
 
             callArgs = [mp4box]
             callArgs.extend(["-dump-udta", "0:stem", stemFile])
