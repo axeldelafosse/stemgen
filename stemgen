@@ -96,13 +96,20 @@ convert() {
     # We downsample to 44.1kHz to avoid problems with the separation software
     # because the models are trained on 44.1kHz audio files
 
+    #  QUALITY            WIDTH  REJ dB   TYPICAL USE
+    #  -v  very high      95%     175     24-bit mastering
+
+    # -M/-I/-L     Phase response = minimum/intermediate/linear(default)
+    # -s           Steep filter (band-width = 99%)
+    # -a           Allow aliasing above the pass-band
+
     if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]] || [[ $FILE_EXTENSION == '.aif' ]] || [[ $FILE_EXTENSION == '.aiff' ]] || [[ $FILE_EXTENSION == '.flac' ]]; then
         if [[ $BIT_DEPTH == '32' ]]; then
             # Downconvert to 24-bit
-            sox "$INPUT_PATH" --show-progress -r 44100 -b 24 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
+            sox "$INPUT_PATH" --show-progress -b 24 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" rate -v -I -s 44100
             BIT_DEPTH=24
         else
-            sox "$INPUT_PATH" --show-progress --no-dither -r 44100 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
+            sox "$INPUT_PATH" --show-progress --no-dither "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" rate -v -I -s 44100
         fi
     else
         # Note that we shouldn't have bit depth with the lossy files format
