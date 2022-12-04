@@ -106,10 +106,10 @@ convert() {
     if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]] || [[ $FILE_EXTENSION == '.aif' ]] || [[ $FILE_EXTENSION == '.aiff' ]] || [[ $FILE_EXTENSION == '.flac' ]]; then
         if [[ $BIT_DEPTH == '32' ]]; then
             # Downconvert to 24-bit
-            sox "$INPUT_PATH" --show-progress -b 24 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" rate -v -I -s 44100
+            sox "$INPUT_PATH" --show-progress -b 24 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" rate -v -a -I -s 44100
             BIT_DEPTH=24
         else
-            sox "$INPUT_PATH" --show-progress --no-dither "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" rate -v -I -s 44100
+            sox "$INPUT_PATH" --show-progress --no-dither "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" rate -v -a -I -s 44100
         fi
     else
         # Note that we shouldn't have bit depth with the lossy files format
