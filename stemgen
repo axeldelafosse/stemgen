@@ -90,13 +90,13 @@ get_bit_depth() {
     echo "Done."
 }
 
-convert_to_wav() {
-    echo "Converting to wav..."
+convert() {
+    echo "Converting to wav and/or downsampling..."
 
     # We downsample to 44.1kHz to avoid problems with the separation software
     # because the models are trained on 44.1kHz audio files
 
-    if [[ $FILE_EXTENSION == '.aif' ]] || [[ $FILE_EXTENSION == '.aiff' ]] || [[ $FILE_EXTENSION == '.flac' ]]; then
+    if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]] || [[ $FILE_EXTENSION == '.aif' ]] || [[ $FILE_EXTENSION == '.aiff' ]] || [[ $FILE_EXTENSION == '.flac' ]]; then
         if [[ $BIT_DEPTH == '32' ]]; then
             # Downconvert to 24-bit
             sox "$INPUT_PATH" --show-progress --no-dither -r 44100 -b 24 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
@@ -275,43 +275,43 @@ setup() {
     case "$INPUT_PATH" in
         *.wave)
             setup_file .wave
-            cp "$INPUT_PATH" "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
+            convert
             ;;
         *.wav)
             setup_file .wav
-            cp "$INPUT_PATH" "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
+            convert
             ;;
         *.aiff)
             setup_file .aiff
-            convert_to_wav
+            convert
             ;;
         *.aif)
             setup_file .aif
-            convert_to_wav
+            convert
             ;;
         *.flac)
             setup_file .flac
-            convert_to_wav
+            convert
             ;;
         *.stem.mp4)
             setup_file .stem.mp4
-            convert_to_wav
+            convert
             ;;
         *.stem.m4a)
             setup_file .stem.m4a
-            convert_to_wav
+            convert
             ;;
         *.m4a)
             setup_file .m4a
-            convert_to_wav
+            convert
             ;;
         *.opus)
             setup_file .opus
-            convert_to_wav
+            convert
             ;;
         *.ogg)
             setup_file .ogg
-            convert_to_wav
+            convert
             ;;
         *)
             echo "Invalid input file format. File should be one of:" ${SUPPORTED_FILES[@]} ${TOLERATED_FILES[@]}
