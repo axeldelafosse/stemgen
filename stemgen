@@ -99,7 +99,7 @@ convert() {
     if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]] || [[ $FILE_EXTENSION == '.aif' ]] || [[ $FILE_EXTENSION == '.aiff' ]] || [[ $FILE_EXTENSION == '.flac' ]]; then
         if [[ $BIT_DEPTH == '32' ]]; then
             # Downconvert to 24-bit
-            sox "$INPUT_PATH" --show-progress --no-dither -r 44100 -b 24 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
+            sox "$INPUT_PATH" --show-progress -r 44100 -b 24 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
             BIT_DEPTH=24
         else
             sox "$INPUT_PATH" --show-progress --no-dither -r 44100 "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav"
