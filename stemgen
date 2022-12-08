@@ -26,7 +26,7 @@ Supported separation software: ${SUPPORTED_SEPARATION_SOFTWARES[@]}
 Supported (lossless) input file format: ${SUPPORTED_FILES[@]}
 Tolerated input file format: ${TOLERATED_FILES[@]}
 "
-VERSION=3.0.0
+VERSION=4.0.0
 
 INPUT_PATH=
 OUTPUT_PATH=output
@@ -192,9 +192,9 @@ split_song() {
         spleeter separate "$INPUT_PATH" -p "$MODEL_PATH" -o "$OUTPUT_PATH"
     elif [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
         if [[ $BIT_DEPTH == 24 ]]; then
-            python3 -m demucs --int24 -n mdx_extra -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
+            python3 -m demucs --int24 -n htdemucs_ft -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
         else
-            python3 -m demucs -n mdx_extra -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
+            python3 -m demucs -n htdemucs_ft -d cpu "$INPUT_PATH" -o "$OUTPUT_PATH/$FILE_NAME"
         fi
     else
         echo "Unknown separation software: $SEPARATION_SOFTWARE"
@@ -212,7 +212,7 @@ create_stem() {
     if [[ $SEPARATION_SOFTWARE == "spleeter" ]]; then
         ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
     elif [[ $SEPARATION_SOFTWARE == "demucs" ]]; then
-        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/mdx_extra/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
+        ./ni-stem/ni-stem create -s "$OUTPUT_PATH/$FILE_NAME/htdemucs_ft/$FILE_NAME/drums.wav" "$OUTPUT_PATH/$FILE_NAME/htdemucs_ft/$FILE_NAME/bass.wav" "$OUTPUT_PATH/$FILE_NAME/htdemucs_ft/$FILE_NAME/other.wav" "$OUTPUT_PATH/$FILE_NAME/htdemucs_ft/$FILE_NAME/vocals.wav" -x "$OUTPUT_PATH/$FILE_NAME/$FILE_NAME.wav" -t "$OUTPUT_PATH/$FILE_NAME/tags.json" -m metadata.json -f alac
     fi
 
     echo "Done."
