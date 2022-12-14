@@ -173,7 +173,9 @@ create_tags_json() {
     done < metadata.txt
 
     # Add `cover`
-    tags+=("cover=file://${path}/cover.jpg")
+    if [[ -e "cover.jpg" ]]; then
+        tags+=("cover=file://${path}/cover.jpg")
+    fi
 
     jo -p -- "${tags[@]:-}" > tags.json
 
