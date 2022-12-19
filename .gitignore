@@ -13,3 +13,6 @@ pretrained_models/*
 
 # Demucs
 demucs/*
+
+# Droplet
+stemgen-droplet.app

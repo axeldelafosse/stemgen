@@ -39,28 +39,21 @@ Stems are fun but nobody's releasing them. Stemgen is a way to create your own s
 - `pip install demucs` or `pip install spleeter`
 - `echo "alias stemgen=/Documents/stemgen/stemgen" >> ~/.zshrc`
 
+## How to customize and create the droplet
+
+I included a slightly modified version of AppleScript-droplet. You can learn more on the repo https://github.com/RichardBronosky/AppleScript-droplet
+
+- Edit `stemgen` with the OUTPUT_PATH you want for example
+- Drag and drop `stemgen` on the `script2droplet-droplet` file in Finder
+
 ## How to use the droplet
 
 Pro tip: you can put the droplet in your dock
 
 - Drag and drop a single track, multiple tracks or a directory on the `stemgen-droplet`
 
-## How to customize and re-create the droplet
-
-I included a slightly modified version of AppleScript-droplet. You can learn more on the repo https://github.com/RichardBronosky/AppleScript-droplet
-
-- Edit `stemgen` with the OUTPUT_PATH you want for example
-- Remove `stemgen-droplet`
-- Drag and drop `stemgen` on the `script2droplet-droplet` file in Finder
-
-or
-
-- Edit `stemgen`
-- `cp stemgen stemgen-droplet.app/Contents/Resources/Scripts/main`
-
 ## Performance
 
-- I recommend to use Demucs with the `mdx_extra` model. This is now the default.
 - Stemgen supports 16-bit and 24-bit audio files!
 - Stemgen needs to downsample the track to 44.1kHz to avoid problems with the separation software because the models are trained on 44.1kHz audio files.
 - You may notice that the output file is pretty big. Apple Lossless Codec (ALAC) for audio encoding is used for lossless audio compression at the cost of increased file size.
