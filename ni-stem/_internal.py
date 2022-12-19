@@ -192,15 +192,15 @@ class StemCreator:
         # label
         if ("label" in self._tags):
             tags["----:com.apple.iTunes:LABEL"] = mutagen.mp4.MP4FreeForm(self._tags["label"].encode("utf-8"))
-        # style
+        # genre
         if ("style" in self._tags):
             tags["\xa9gen"] = self._tags["style"]
-        # genre
         if ("genre" in self._tags):
             tags["\xa9gen"] = self._tags["genre"]
         # trkn
         if ("track" in self._tags):
-            tags["trkn"] = [int(self._tags["track"])]
+            if ("track_count" in self._tags):
+                tags["trkn"] = [(int(self._tags["track"]), int(self._tags["track_count"]))]
         if ("track_no" in self._tags):
             if ("track_count" in self._tags):
                 tags["trkn"] = [(int(self._tags["track_no"]), int(self._tags["track_count"]))]
