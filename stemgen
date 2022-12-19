@@ -53,7 +53,13 @@ cd_root() {
 get_cover() {
     echo "Extracting cover..."
 
-    ffmpeg -i "$INPUT_PATH" -an -vcodec copy "$OUTPUT_PATH/$FILE_NAME/cover.jpg" -y
+    if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]]; then
+        python3 ni-stem/extract_cover_art.py "$INPUT_PATH" "$OUTPUT_PATH/$FILE_NAME/cover.jpg"
+        echo "Cover extracted from APIC tag."
+    else
+        ffmpeg -i "$INPUT_PATH" -an -vcodec copy "$OUTPUT_PATH/$FILE_NAME/cover.jpg" -y
+        echo "Cover extracted with ffmpeg."
+    fi
 
     if [[ $CROP_COVER == true ]]; then
         # https://legacy.imagemagick.org/Usage/thumbnails/#cut
