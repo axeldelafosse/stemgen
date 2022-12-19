@@ -198,9 +198,10 @@ class StemCreator:
         if ("genre" in self._tags):
             tags["\xa9gen"] = self._tags["genre"]
         # trkn
-        if ("track" in self._tags):
-            if ("track_count" in self._tags):
-                tags["trkn"] = [(int(self._tags["track"]), int(self._tags["track_count"]))]
+        # if ("track" in self._tags):
+        #     if ("track_count" in self._tags):
+        #         tags["trkn"] = [(int(self._tags["track"]), int(self._tags["track_count"]))]
+        # TODO: "track" can be a string like "A1" or "B2" (from vinyl)
         if ("track_no" in self._tags):
             if ("track_count" in self._tags):
                 tags["trkn"] = [(int(self._tags["track_no"]), int(self._tags["track_count"]))]
