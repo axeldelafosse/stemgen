@@ -198,10 +198,10 @@ class StemCreator:
         if ("style" in self._tags):
             tags["\xa9gen"] = self._tags["style"]
         # trkn
+        # TODO: "track" can be a string like "A1" or "B2" (from vinyl)
         # if ("track" in self._tags):
         #     if ("track_count" in self._tags):
         #         tags["trkn"] = [(int(self._tags["track"]), int(self._tags["track_count"]))]
-        # TODO: "track" can be a string like "A1" or "B2" (from vinyl)
         if ("track_no" in self._tags):
             if ("track_count" in self._tags):
                 tags["trkn"] = [(int(self._tags["track_no"]), int(self._tags["track_count"]))]
@@ -209,10 +209,13 @@ class StemCreator:
         if ("catalog_no" in self._tags):
             tags["----:com.apple.iTunes:CATALOGNUMBER"] = mutagen.mp4.MP4FreeForm(self._tags["catalog_no"].encode("utf-8"))
         # date
-        if ("year" in self._tags):
-            tags["\xa9day"] = str(self._tags["year"]).encode("utf-8")
-        if ("date" in self._tags):
-            tags["\xa9day"] = str(self._tags["date"]).encode("utf-8")
+        # can be a string ("2000-01-01") or an integer (2000)
+        year = self._tags.get("year")
+        if year is not None:
+            tags["\xa9day"] = year
+        date = self._tags.get("date")
+        if date is not None:
+            tags["\xa9day"] = date
         # isrc
         if ("isrc" in self._tags):
             tags["----:com.apple.iTunes:ISRC"] = mutagen.mp4.MP4FreeForm(self._tags["isrc"].encode("utf-8"), mutagen.mp4.AtomDataType.ISRC)
