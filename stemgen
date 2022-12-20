@@ -75,6 +75,11 @@ get_metadata() {
 
     ffmpeg -i "$INPUT_PATH" -f ffmetadata "$OUTPUT_PATH/$FILE_NAME/metadata.txt" -y
 
+    # Get label from TPUB tag
+    if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]]; then
+        python3 ni-stem/extract_label.py "$INPUT_PATH" "$OUTPUT_PATH/$FILE_NAME/metadata.txt"
+    fi
+
     echo "Done."
 }
 
@@ -158,14 +163,15 @@ create_tags_json() {
         value=${tag##"$title="}
         title=$(echo "$title" | awk '{ print tolower($0) }')
         if [[ $title == "title" ]] || [[ $title == "style" ]] ||
-            [[ $title == "artist" ]] || [[ $title == "label" ]] ||
+            [[ $title == "artist" ]] || [[ $title == "remixer" ]] ||
             [[ $title == "release" ]] || [[ $title == "album" ]] ||
-            [[ $title == "remixer" ]] || [[ $title == "mix" ]] ||
+            [[ $title == "mix" ]] ||
             [[ $title == "producer" ]] || [[ $title == "bpm" ]] ||
             [[ $title == "genre" ]] || [[ $title == "catalog_no" ]] ||
             [[ $title == "track_no" ]] || [[ $title == "track_count" ]] ||
             [[ $title == "track" ]] || [[ $title == "date" ]] ||
             [[ $title == "year" ]] || [[ $title == "isrc" ]] ||
+            [[ $title == "publisher" ]] || [[ $title == "label" ]] ||
             [[ $title == "comment" ]] || [[ $title == "description" ]] ||
             [[ $title == "url_discogs_artist_site" ]] ||
             [[ $title == "url_discogs_release_site" ]] ||

@@ -190,6 +190,8 @@ class StemCreator:
         if ("producer" in self._tags):
             tags["----:com.apple.iTunes:PRODUCER"] = mutagen.mp4.MP4FreeForm(self._tags["producer"].encode("utf-8"))
         # label
+        if ("publisher" in self._tags):
+            tags["----:com.apple.iTunes:LABEL"] = mutagen.mp4.MP4FreeForm(self._tags["publisher"].encode("utf-8"))
         if ("label" in self._tags):
             tags["----:com.apple.iTunes:LABEL"] = mutagen.mp4.MP4FreeForm(self._tags["label"].encode("utf-8"))
         # genre
