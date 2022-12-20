@@ -209,13 +209,11 @@ class StemCreator:
         if ("catalog_no" in self._tags):
             tags["----:com.apple.iTunes:CATALOGNUMBER"] = mutagen.mp4.MP4FreeForm(self._tags["catalog_no"].encode("utf-8"))
         # date
-        # can be a string ("2000-01-01") or an integer (2000)
-        year = self._tags.get("year")
-        if year is not None:
-            tags["\xa9day"] = year
-        date = self._tags.get("date")
-        if date is not None:
-            tags["\xa9day"] = date
+        # TODO: "date" can be a string ("2000-01-01") or an integer (2000)
+        if ("year" in self._tags):
+            tags["\xa9day"] = self._tags["year"]
+        # if ("date" in self._tags):
+        #     tags["\xa9day"] = self._tags["date"]
         # isrc
         if ("isrc" in self._tags):
             tags["----:com.apple.iTunes:ISRC"] = mutagen.mp4.MP4FreeForm(self._tags["isrc"].encode("utf-8"), mutagen.mp4.AtomDataType.ISRC)
