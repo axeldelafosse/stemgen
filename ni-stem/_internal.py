@@ -193,10 +193,10 @@ class StemCreator:
         if ("label" in self._tags):
             tags["----:com.apple.iTunes:LABEL"] = mutagen.mp4.MP4FreeForm(self._tags["label"].encode("utf-8"))
         # genre
-        if ("style" in self._tags):
-            tags["\xa9gen"] = self._tags["style"]
         if ("genre" in self._tags):
             tags["\xa9gen"] = self._tags["genre"]
+        if ("style" in self._tags):
+            tags["\xa9gen"] = self._tags["style"]
         # trkn
         # if ("track" in self._tags):
         #     if ("track_count" in self._tags):
@@ -210,9 +210,9 @@ class StemCreator:
             tags["----:com.apple.iTunes:CATALOGNUMBER"] = mutagen.mp4.MP4FreeForm(self._tags["catalog_no"].encode("utf-8"))
         # date
         if ("year" in self._tags):
-            tags["\xa9day"] = self._tags["year"]
+            tags["\xa9day"] = str(self._tags["year"]).encode("utf-8")
         if ("date" in self._tags):
-            tags["\xa9day"] = self._tags["date"]
+            tags["\xa9day"] = str(self._tags["date"]).encode("utf-8")
         # isrc
         if ("isrc" in self._tags):
             tags["----:com.apple.iTunes:ISRC"] = mutagen.mp4.MP4FreeForm(self._tags["isrc"].encode("utf-8"), mutagen.mp4.AtomDataType.ISRC)
