@@ -1,3 +1,26 @@
+# INSTRUCTIONS ON GPU USAGE
+Make sure your vm or device recognises your GPU. [WSL Step 1](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#set-wsl-version-to-1-or-2) [WSL Step 2](https://docs.nvidia.com/cuda/wsl-user-guide/index.html)
+
+apt install ffmpeg sox jo -y
+
+pip3 install demucs
+
+./stemgen-GPU
+
+
+
+
+all this does is remove the CPU as the default.
+
+
+
+
+
+
+
+
+
+
 # 🎛 Stemgen
 
 Stemgen is a Stem file generator. Convert any track into a Stem and have fun with Traktor.
