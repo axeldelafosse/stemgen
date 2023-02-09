@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath("mutagen"))
 import mutagen
 
 def extract_label(input_path, output_path):
-    # Open the file using the WAVE class
+    # Open the file
     file = mutagen.File(input_path)
 
     # Check if the file contains a label

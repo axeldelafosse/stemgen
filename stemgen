@@ -53,7 +53,7 @@ cd_root() {
 get_cover() {
     echo "Extracting cover..."
 
-    if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]]; then
+    if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]] || [[ $FILE_EXTENSION == '.aif' ]] || [[ $FILE_EXTENSION == '.aiff' ]]; then
         python3 ni-stem/extract_cover_art.py "$INPUT_PATH" "$OUTPUT_PATH/$FILE_NAME/cover.jpg"
         echo "Cover extracted from APIC tag."
     else
@@ -76,8 +76,18 @@ get_metadata() {
     ffmpeg -i "$INPUT_PATH" -f ffmetadata "$OUTPUT_PATH/$FILE_NAME/metadata.txt" -y
 
     # Get label from TPUB tag
-    if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]]; then
+    if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]] || [[ $FILE_EXTENSION == '.aif' ]] || [[ $FILE_EXTENSION == '.aiff' ]]; then
         python3 ni-stem/extract_label.py "$INPUT_PATH" "$OUTPUT_PATH/$FILE_NAME/metadata.txt"
+    fi
+
+    # Get genre from TCON tag
+    if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]] || [[ $FILE_EXTENSION == '.aif' ]] || [[ $FILE_EXTENSION == '.aiff' ]]; then
+        python3 ni-stem/extract_genre.py "$INPUT_PATH" "$OUTPUT_PATH/$FILE_NAME/metadata.txt"
+    fi
+
+    # Get URL from WXXX tag
+    if [[ $FILE_EXTENSION == '.wav' ]] || [[ $FILE_EXTENSION == '.wave' ]] || [[ $FILE_EXTENSION == '.aif' ]] || [[ $FILE_EXTENSION == '.aiff' ]]; then
+        python3 ni-stem/extract_url.py "$INPUT_PATH" "$OUTPUT_PATH/$FILE_NAME/metadata.txt"
     fi
 
     echo "Done."
