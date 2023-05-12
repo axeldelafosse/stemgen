@@ -111,14 +111,9 @@ class StemCreator:
 
             if _windows or _linux:
                 converterArgs.extend(["-i"  , trackPath])
-                if self._format == "aac":
-                    converterArgs.extend(["-b", "256k"])
-                else:
-                    converterArgs.extend(["-c:a", self._format])
+                converterArgs.extend(["-c:a", self._format])
             else:
                 converterArgs.extend(["-d"  , self._format])
-                if self._format == "aac":
-                    converterArgs.extend(["-b", "256000"])
                 converterArgs.extend([trackPath])
 
             converterArgs.extend([newPath])

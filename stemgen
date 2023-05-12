@@ -15,7 +15,7 @@ LOGO="
 
 SUPPORTED_SEPARATION_SOFTWARES=('demucs' 'spleeter')
 SUPPORTED_FILES=('.wav' '.wave' '.aif' '.aiff' '.flac')
-TOLERATED_FILES=('.opus' '.ogg' '.m4a' '.mp4' '.stem.m4a' '.stem.mp4')
+TOLERATED_FILES=('.stem.m4a' '.stem.mp4')
 
 USAGE="$LOGO
 Stemgen is a Stem file generator. Convert any track into a stem and have fun with Traktor.
