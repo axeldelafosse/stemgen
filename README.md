@@ -28,42 +28,41 @@ And trust me: it's even better in real life. Can't wait to see him again!
 
 ## Requirement
 
-- demucs https://github.com/facebookresearch/demucs or spleeter https://github.com/deezer/spleeter
+- demucs https://github.com/facebookresearch/demucs
 - ffmpeg https://www.ffmpeg.org
 - sox https://sox.sourceforge.net
-- ni-stem (improved version provided in this repo or available at https://www.stems-music.com/stems-is-for-developers)
-- jo https://github.com/jpmens/jo
-- imagemagick https://imagemagick.org if you want to crop covers
 
 ## Usage
 
+You can use `stemgen.py` to generate stems:
+
 - Clone this repo (downloading instead of cloning loses permissions to execute files)
-- `$ ./stemgen -i track.wav` or drag and drop a track on `stemgen-droplet`
+- `$ python3 stemgen.py -i track.wav`
+- Have fun! Your new `.stem.m4a` file is in `output` dir
+- Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
+
+## Bring your own stems
+
+You can use `stem.py` to create stems:
+
+- Clone this repo (downloading instead of cloning loses permissions to execute files)
+- `$ python3 stem.py -i track/track.0.wav`
+- You need to follow this naming convention:
+  [TRACK_NAME].[TRACK_NUMBER].[FILE_EXTENSION]
+- Track name should be identical for all files
+- Please use 0 as the TRACK_NUMBER for the master track. Example:
+  'track.0.wav' for the master file then 'track.1.wav' for the first stem, etc...
 - Have fun! Your new `.stem.m4a` file is in `output` dir
 - Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
 
 ## Quick install on macOS
 
-- `brew install coreutils ffmpeg sox jo imagemagick`
-- `pip install demucs` or `pip install spleeter`
-- `echo "alias stemgen=/Documents/stemgen/stemgen" >> ~/.zshrc`
-
-## How to customize and create the droplet
-
-I included a slightly modified version of AppleScript-droplet. You can learn more on the repo https://github.com/RichardBronosky/AppleScript-droplet
-
-- Edit `stemgen` with the OUTPUT_PATH you want for example
-- Drag and drop `stemgen` on the `script2droplet-droplet` file in Finder
-
-## How to use the droplet
-
-Pro tip: you can put the droplet in your dock
-
-- Drag and drop a single track, multiple tracks or a directory on the `stemgen-droplet`
+- `python3 -m pip install -U demucs`
+- `brew install coreutils ffmpeg sox`
 
 ## Performance
 
-- Stemgen supports 16-bit and 24-bit audio files!
+- Stem and Stemgen supports 16-bit and 24-bit audio files!
 - Stemgen needs to downsample the track to 44.1kHz to avoid problems with the separation software because the models are trained on 44.1kHz audio files.
 - You may notice that the output file is pretty big. Apple Lossless Codec (ALAC) for audio encoding is used for lossless audio compression at the cost of increased file size.
 

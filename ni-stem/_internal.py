@@ -58,7 +58,7 @@ class StemCreator:
     def __init__(self, mixdownTrack, stemTracks, fileFormat, metadataFile = None, tags = None):
         self._mixdownTrack = mixdownTrack
         self._stemTracks   = stemTracks
-        self._format       = fileFormat if fileFormat else "alac"
+        self._format       = "alac"
         self._tags         = json.load(open(tags)) if tags else {}
 
         # Mutagen complains gravely if we do not explicitly convert the tag values to a
@@ -106,15 +106,12 @@ class StemCreator:
             newPath = trackName + ".m4a"
             _removeFile(newPath)
 
-            converter = os.path.join(_getProgramPath(), "avconv_win", "avconv.exe") if _windows else "ffmpeg" if _linux else "afconvert"
+            converter = os.path.join(_getProgramPath(), "avconv_win", "avconv.exe") if _windows else "ffmpeg"
             converterArgs = [converter]
 
-            if _windows or _linux:
-                converterArgs.extend(["-i"  , trackPath])
-                converterArgs.extend(["-c:a", self._format])
-            else:
-                converterArgs.extend(["-d"  , self._format])
-                converterArgs.extend([trackPath])
+            converterArgs.extend(["-i"  , trackPath])
+            converterArgs.extend(["-c:a", self._format])
+            converterArgs.extend(["-c:v", "copy"])
 
             converterArgs.extend([newPath])
             subprocess.check_call(converterArgs)
@@ -175,6 +172,9 @@ class StemCreator:
         # album
         if ("release" in self._tags):
             tags["\xa9alb"] = self._tags["release"]
+        # album artist
+        if ("album_artist" in self._tags):
+            tags["aART"] = self._tags["album_artist"]
         # remixer
         if ("remixer" in self._tags):
             tags["----:com.apple.iTunes:REMIXER"] = mutagen.mp4.MP4FreeForm(self._tags["remixer"].encode("utf-8"))
@@ -185,6 +185,8 @@ class StemCreator:
         if ("producer" in self._tags):
             tags["----:com.apple.iTunes:PRODUCER"] = mutagen.mp4.MP4FreeForm(self._tags["producer"].encode("utf-8"))
         # label
+        if ("organization" in self._tags):
+            tags["----:com.apple.iTunes:LABEL"] = mutagen.mp4.MP4FreeForm(self._tags["organization"].encode("utf-8"))
         if ("publisher" in self._tags):
             tags["----:com.apple.iTunes:LABEL"] = mutagen.mp4.MP4FreeForm(self._tags["publisher"].encode("utf-8"))
         if ("label" in self._tags):
@@ -195,10 +197,9 @@ class StemCreator:
         if ("style" in self._tags):
             tags["\xa9gen"] = self._tags["style"]
         # trkn
-        # TODO: "track" can be a string like "A1" or "B2" (from vinyl)
-        # if ("track" in self._tags):
-        #     if ("track_count" in self._tags):
-        #         tags["trkn"] = [(int(self._tags["track"]), int(self._tags["track_count"]))]
+        if ("track" in self._tags):
+            if ("track_count" in self._tags):
+                tags["trkn"] = self._tags["track"]
         if ("track_no" in self._tags):
             if ("track_count" in self._tags):
                 tags["trkn"] = [(int(self._tags["track_no"]), int(self._tags["track_count"]))]
@@ -206,11 +207,10 @@ class StemCreator:
         if ("catalog_no" in self._tags):
             tags["----:com.apple.iTunes:CATALOGNUMBER"] = mutagen.mp4.MP4FreeForm(self._tags["catalog_no"].encode("utf-8"))
         # date
-        # TODO: "date" can be a string ("2000-01-01") or an integer (2000)
         if ("year" in self._tags):
             tags["\xa9day"] = self._tags["year"]
-        # if ("date" in self._tags):
-        #     tags["\xa9day"] = self._tags["date"]
+        if ("date" in self._tags):
+            tags["\xa9day"] = self._tags["date"]
         # isrc
         if ("isrc" in self._tags):
             tags["----:com.apple.iTunes:ISRC"] = mutagen.mp4.MP4FreeForm(self._tags["isrc"].encode("utf-8"), mutagen.mp4.AtomDataType.ISRC)
@@ -266,6 +266,8 @@ class StemCreator:
         if ("url_discogs_artist_site" in self._tags):
             tags["----:com.apple.iTunes:URL_DISCOGS_ARTIST_SITE"] = mutagen.mp4.MP4FreeForm(self._tags["url_discogs_artist_site"].encode("utf-8"))
         # url_discogs_release_site
+        if ("www" in self._tags):
+            tags["----:com.apple.iTunes:URL_DISCOGS_RELEASE_SITE"] = mutagen.mp4.MP4FreeForm(self._tags["www"].encode("utf-8"))
         if ("url_discogs_release_site" in self._tags):
             tags["----:com.apple.iTunes:URL_DISCOGS_RELEASE_SITE"] = mutagen.mp4.MP4FreeForm(self._tags["url_discogs_release_site"].encode("utf-8"))
         # youtube_id
@@ -277,6 +279,9 @@ class StemCreator:
         # qobuz_id
         if ("qobuz_id" in self._tags):
             tags["----:com.apple.iTunes:Qobuz Id"] = mutagen.mp4.MP4FreeForm(self._tags["qobuz_id"].encode("utf-8"))
+        # discogs_id
+        if ("discogs_release_id" in self._tags):
+            tags["----:com.apple.iTunes:Discogs Id"] = mutagen.mp4.MP4FreeForm(self._tags["discogs_release_id"].encode("utf-8"))
 
         tags["TAUT"] = "STEM"
         tags.save(outputFilePath)
