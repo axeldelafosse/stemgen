@@ -44,6 +44,7 @@ args = parser.parse_args()
 INPUT_PATH = args.INPUT_PATH
 OUTPUT_PATH = args.OUTPUT_PATH
 DIR = Path(__file__).parent.absolute()
+PYTHON_EXEC = sys.executable if not None else PYTHON_EXEC
 
 def cd_root():
     os.chdir(DIR)
@@ -52,7 +53,7 @@ def get_cover():
     print("Extracting cover...")
 
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run(['python3', 'ni-stem/extract_cover_art.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_cover_art.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg"])
         print("Cover extracted from APIC tag.")
     else:
         subprocess.run(['ffmpeg', '-i', INPUT_PATH, '-an', '-vcodec', 'copy', f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg", '-y'])
@@ -67,15 +68,15 @@ def get_metadata():
 
     # Get label from TPUB tag
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run(['python3', 'ni-stem/extract_label.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_label.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
 
     # Get genre from TCON tag
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run(['python3', 'ni-stem/extract_genre.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_genre.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
 
     # Get URL from WXXX tag
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run(['python3', 'ni-stem/extract_url.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_url.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
 
     print("Done.")
 
@@ -111,7 +112,7 @@ def create_tags_json():
 
     # Add `cover`
     if os.path.exists("cover.jpg"):
-        tags["cover"] = (f"file://{os.path.join(DIR, OUTPUT_PATH + '/' + FILE_NAME + '/cover.jpg')}")
+        tags["cover"] = (f"{os.path.join(DIR, OUTPUT_PATH + '/' + FILE_NAME + '/cover.jpg')}")
 
     with open("tags.json", "w") as f:
         json.dump(tags, f)
@@ -142,7 +143,7 @@ def create_stem():
             json.dump(tags, f)
             f.truncate()
 
-        stem_args = ["./ni-stem/ni-stem", "create", "-s"]
+        stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
         stem_args += [f"{INPUT_FOLDER}/{FILE_NAME}.1{FILE_EXTENSION}",
                     f"{INPUT_FOLDER}/{FILE_NAME}.2{FILE_EXTENSION}",
                     f"{INPUT_FOLDER}/{FILE_NAME}.3{FILE_EXTENSION}",
@@ -161,7 +162,7 @@ def create_stem():
             json.dump(tags, f)
             f.truncate()
 
-        stem_args = ["./ni-stem/ni-stem", "create", "-s"]
+        stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
         stem_args += [f"{INPUT_FOLDER}/{FILE_NAME}.5{FILE_EXTENSION}",
                     f"{INPUT_FOLDER}/{FILE_NAME}.6{FILE_EXTENSION}",
                     f"{INPUT_FOLDER}/{FILE_NAME}.7{FILE_EXTENSION}",
@@ -172,7 +173,7 @@ def create_stem():
 
         subprocess.run(stem_args)
     else:
-        stem_args = ["./ni-stem/ni-stem", "create", "-s"]
+        stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
         stem_args += [f"{INPUT_FOLDER}/{FILE_NAME}.1{FILE_EXTENSION}",
                     f"{INPUT_FOLDER}/{FILE_NAME}.2{FILE_EXTENSION}",
                     f"{INPUT_FOLDER}/{FILE_NAME}.3{FILE_EXTENSION}",
@@ -208,7 +209,7 @@ def setup():
             print(f"Please install {package} before running Stem.")
             sys.exit(2)
 
-    if not os.path.exists('./ni-stem/ni-stem'):
+    if not os.path.exists('ni-stem/ni-stem'):
         print("Please install ni-stem before running Stem.")
         sys.exit(2)
 

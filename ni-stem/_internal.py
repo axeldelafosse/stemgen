@@ -4,7 +4,6 @@ import base64
 import mutagen
 import mutagen.mp4
 import mutagen.id3
-from urllib.request import urlopen
 import os
 import platform
 import subprocess
@@ -106,7 +105,7 @@ class StemCreator:
             newPath = trackName + ".m4a"
             _removeFile(newPath)
 
-            converter = os.path.join(_getProgramPath(), "avconv_win", "avconv.exe") if _windows else "ffmpeg"
+            converter = "ffmpeg"
             converterArgs = [converter]
 
             converterArgs.extend(["-i"  , trackPath])
@@ -220,12 +219,12 @@ class StemCreator:
         # cover
         if ("cover" in self._tags):
             coverPath = self._tags["cover"]
-            f = urlopen(coverPath)
-            tags["covr"] = [mutagen.mp4.MP4Cover(f.read(),
+            with open(coverPath, "rb") as f:
+                coverData = f.read()
+            tags["covr"] = [mutagen.mp4.MP4Cover(coverData,
               mutagen.mp4.MP4Cover.FORMAT_PNG if coverPath.endswith('png') else
               mutagen.mp4.MP4Cover.FORMAT_JPEG
             )]
-            f.close()
         # description (long description)
         if ("description" in self._tags):
             tags["ldes"] = self._tags["description"]

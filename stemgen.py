@@ -39,6 +39,7 @@ args = parser.parse_args()
 INPUT_PATH = args.INPUT_PATH
 OUTPUT_PATH = args.OUTPUT_PATH
 DIR = Path(__file__).parent.absolute()
+PYTHON_EXEC = sys.executable if not None else PYTHON_EXEC
 
 def cd_root():
     os.chdir(DIR)
@@ -47,7 +48,7 @@ def get_cover():
     print("Extracting cover...")
 
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run(['python3', 'ni-stem/extract_cover_art.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_cover_art.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg"])
         print("Cover extracted from APIC tag.")
     else:
         subprocess.run(['ffmpeg', '-i', INPUT_PATH, '-an', '-vcodec', 'copy', f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg", '-y'])
@@ -62,15 +63,15 @@ def get_metadata():
 
     # Get label from TPUB tag
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run(['python3', 'ni-stem/extract_label.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_label.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
 
     # Get genre from TCON tag
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run(['python3', 'ni-stem/extract_genre.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_genre.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
 
     # Get URL from WXXX tag
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run(['python3', 'ni-stem/extract_url.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_url.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
 
     print("Done.")
 
@@ -146,7 +147,7 @@ def create_tags_json():
 
     # Add `cover`
     if os.path.exists("cover.jpg"):
-        tags["cover"] = (f"file://{os.path.join(DIR, OUTPUT_PATH + '/' + FILE_NAME + '/cover.jpg')}")
+        tags["cover"] = (f"{os.path.join(DIR, OUTPUT_PATH + '/' + FILE_NAME + '/cover.jpg')}")
 
     with open("tags.json", "w") as f:
         json.dump(tags, f)
@@ -163,10 +164,10 @@ def split_stems():
 
     if BIT_DEPTH == 24:
         print("Using 24-bit model...")
-        subprocess.run(['python3', "-m", "demucs", "--int24", "-n", "htdemucs", "-d", "cpu", INPUT_PATH, "-o", f"{OUTPUT_PATH}/{FILE_NAME}"])
+        subprocess.run([PYTHON_EXEC, "-m", "demucs", "--int24", "-n", "htdemucs", "-d", "cpu", INPUT_PATH, "-o", f"{OUTPUT_PATH}/{FILE_NAME}"])
     else:
         print("Using 16-bit model...")
-        subprocess.run(['python3', "-m", "demucs", "-n", "htdemucs", "-d", "cpu", INPUT_PATH, "-o", f"{OUTPUT_PATH}/{FILE_NAME}"])
+        subprocess.run([PYTHON_EXEC, "-m", "demucs", "-n", "htdemucs", "-d", "cpu", INPUT_PATH, "-o", f"{OUTPUT_PATH}/{FILE_NAME}"])
 
     print("Done.")
 
@@ -174,7 +175,7 @@ def create_stem():
     print("Creating stem...")
     cd_root()
 
-    stem_args = ["./ni-stem/ni-stem", "create", "-s"]
+    stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
     stem_args += [f"{OUTPUT_PATH}/{FILE_NAME}/htdemucs/{FILE_NAME}/drums.wav",
                   f"{OUTPUT_PATH}/{FILE_NAME}/htdemucs/{FILE_NAME}/bass.wav",
                   f"{OUTPUT_PATH}/{FILE_NAME}/htdemucs/{FILE_NAME}/other.wav",
@@ -206,11 +207,11 @@ def setup():
             print(f"Please install {package} before running Stemgen.")
             sys.exit(2)
 
-    if subprocess.run(["python3", "-m", "demucs", "-h"], capture_output=True, text=True).stdout.strip() == "":
+    if subprocess.run([PYTHON_EXEC, "-m", "demucs", "-h"], capture_output=True, text=True).stdout.strip() == "":
         print("Please install demucs before running Stemgen.")
         exit(2)
 
-    if not os.path.exists('./ni-stem/ni-stem'):
+    if not os.path.exists('ni-stem/ni-stem'):
         print("Please install ni-stem before running Stemgen.")
         sys.exit(2)
 
