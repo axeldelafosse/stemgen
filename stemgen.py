@@ -42,7 +42,7 @@ INPUT_PATH = args.INPUT_PATH
 OUTPUT_PATH = args.OUTPUT_PATH
 FORMAT = args.FORMAT
 DIR = Path(__file__).parent.absolute()
-PYTHON_EXEC = sys.executable if not None else PYTHON_EXEC
+PYTHON_EXEC = sys.executable if not None else "python3"
 
 def cd_root():
     os.chdir(DIR)
