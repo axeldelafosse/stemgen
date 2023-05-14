@@ -141,24 +141,36 @@ class StemCreator:
             converterArgs = [converter]
 
             if self._format == "aac":
-                aacCodec = _getAacCodec()
-                sampleRate = _getSampleRate(trackPath)
+                # AAC
+                if _windows and (_findCmd("qaac64") is not None or _findCmd("qaac32") is not None or _findCmd("qaac") is not None):
+                    # Use QAAC on Windows if installed
+                    qaac = _findCmd("qaac64") if not None else _findCmd("qaac32") if not None else _findCmd("qaac")
+                    print("using QAAC Audio Toolbox codec")
 
-                print("using " + aacCodec + " codec")
+                    converterArgs = [qaac]
+                    converterArgs.extend([trackPath])
+                    converterArgs.extend(["--tvbr", "127"])
+                    converterArgs.extend(["-o"])
+                else:
+                    aacCodec = _getAacCodec()
+                    sampleRate = _getSampleRate(trackPath)
 
-                converterArgs.extend(["-i"  , trackPath])
-                converterArgs.extend(["-c:a", aacCodec])
-                if aacCodec == 'aac_at':
-                    converterArgs.extend(["-q:a", "0"])
-                elif aacCodec == 'libfdk_aac':
-                    converterArgs.extend(["-vbr", "5"])
-                    # converterArgs.extend(["-cutoff", "20000"])
-                converterArgs.extend(["-c:v", "copy"])
-                # If the sample rate is superior to 48kHz, we need to downsample to 48kHz
-                if sampleRate > 48000:
-                    print(str(sampleRate) + "Hz sample rate, downsampling to 48kHz")
-                    converterArgs.extend(["-ar", "48000"])
+                    print("using " + aacCodec + " codec")
+
+                    converterArgs.extend(["-i"  , trackPath])
+                    converterArgs.extend(["-c:a", aacCodec])
+                    if aacCodec == 'aac_at':
+                        converterArgs.extend(["-q:a", "0"])
+                    elif aacCodec == 'libfdk_aac':
+                        converterArgs.extend(["-vbr", "5"])
+                        # converterArgs.extend(["-cutoff", "20000"])
+                    converterArgs.extend(["-c:v", "copy"])
+                    # If the sample rate is superior to 48kHz, we need to downsample to 48kHz
+                    if sampleRate > 48000:
+                        print(str(sampleRate) + "Hz sample rate, downsampling to 48kHz")
+                        converterArgs.extend(["-ar", "48000"])
             else:
+                # ALAC
                 converterArgs.extend(["-i"  , trackPath])
                 converterArgs.extend(["-c:a", "alac"])
                 converterArgs.extend(["-c:v", "copy"])
