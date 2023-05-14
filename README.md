@@ -26,6 +26,12 @@ And trust me: it's even better in real life. Can't wait to see him again!
 >
 > And this right here -- I have to be honest -- it's groundbreaking to me in that sense. It's putting me back in touch with using these tools that I'm using right now as mere instruments of my will, rather than me being forced around the way they were designed to be operated, and in the process losing the very essence of what I was trying to express. Goddammit!" – François K, [Expansions (Live Stems Dub and Talk)](https://www.youtube.com/watch?v=jjZz0E8FuVs)
 
+## What?
+
+- **Highest quality**: ALAC stems by default, or AAC using the best encoder possible.
+- **Automatic metadata tagging**: scraping metadata from the master file and writing it back to the stem file.
+- **Batching**: you can use this CLI to batch your stem creation and/or create a powerful workflow.
+
 ## Requirement
 
 - demucs https://github.com/facebookresearch/demucs
@@ -36,7 +42,6 @@ And trust me: it's even better in real life. Can't wait to see him again!
 
 You can use `stemgen.py` to generate stems:
 
-- Clone this repo (downloading instead of cloning loses permissions to execute files)
 - `$ python3 stemgen.py -i track.wav`
 - Have fun! Your new `.stem.m4a` file is in `output` dir
 - Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
@@ -45,12 +50,10 @@ You can use `stemgen.py` to generate stems:
 
 You can use `stem.py` to create stems:
 
-- Clone this repo (downloading instead of cloning loses permissions to execute files)
 - `$ python3 stem.py -i track/track.0.wav`
-- You need to follow this naming convention:
-  [TRACK_NAME].[TRACK_NUMBER].[FILE_EXTENSION]
+- You need to follow this naming convention: `[TRACK_NAME].[TRACK_NUMBER].[FILE_EXTENSION]`
 - Track name should be identical for all files
-- Please use 0 as the TRACK_NUMBER for the master track. Example:
+- Please use `0` as the `TRACK_NUMBER` for the master track. Example:
   'track.0.wav' for the master file then 'track.1.wav' for the first stem, etc...
 - Have fun! Your new `.stem.m4a` file is in `output` dir
 - Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
@@ -58,7 +61,18 @@ You can use `stem.py` to create stems:
 ## Quick install on macOS
 
 - `python3 -m pip install -U demucs`
-- `brew install coreutils ffmpeg sox`
+- `brew install coreutils sox`
+- `brew tap homebrew-ffmpeg/ffmpeg`
+- `brew install homebrew-ffmpeg/ffmpeg/ffmpeg --with-fdk-aac`
+
+## Quick install on Windows
+
+- `python3 -m pip install -U demucs`
+- You might need Microsoft C++ Build Tools https://visualstudio.microsoft.com/visual-cpp-build-tools/
+  for Demucs
+- Download ffmpeg from https://www.ffmpeg.org/download.html
+- Download sox from https://sourceforge.net/projects/sox/files/sox/
+- Add ffmpeg and sox to your PATH
 
 ## Performance
 

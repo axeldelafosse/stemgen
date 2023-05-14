@@ -8,6 +8,7 @@ import os
 import platform
 import subprocess
 import sys
+import re
 
 stemDescription  = 'stem-meta'
 stemOutExtension = ".m4a"
@@ -17,7 +18,6 @@ _linux = platform.system() == "Linux"
 
 _supported_files_no_conversion = [".m4a", ".mp4", ".m4p"]
 _supported_files_conversion = [".wav", ".wave", ".aif", ".aiff", ".flac"]
-_supported_files = _supported_files_no_conversion + _supported_files_conversion
 
 def _removeFile(path):
     if os.path.lexists(path):
@@ -45,6 +45,38 @@ def _findCmd(cmd):
                 return path
     return None
 
+def _checkAvailableAacEncoders():
+    output = subprocess.check_output([_findCmd("ffmpeg"), "-v", "error", "-codecs"])
+    aac_codecs = [
+        x for x in
+        output.splitlines() if "AAC (Advanced Audio Coding)" in str(x)
+    ][0]
+    hay = aac_codecs.decode('ascii')
+    match = re.findall(r'\(encoders: ([^\)]*) \)', hay)
+    if match:
+        return match[0].split(" ")
+    else:
+        return None
+
+def _getAacCodec():
+    avail = _checkAvailableAacEncoders()
+    if avail is not None:
+        if 'aac_at' in avail:
+            codec = 'aac_at'
+        elif 'libfdk_aac' in avail:
+            codec = 'libfdk_aac'
+        else:
+            print("For better audio quality, install `aac_at` or `libfdk_aac` codec.")
+            codec = 'aac'
+    else:
+        codec = 'aac'
+
+    return codec
+
+def _getSampleRate(trackPath):
+    output = subprocess.check_output([_findCmd("ffprobe"), "-v", "error", "-select_streams", "a", "-show_entries", "stream=sample_rate", "-of", "default=noprint_wrappers=1:nokey=1", trackPath])
+    return int(output)
+
 class StemCreator:
 
     _defaultMetadata = [
@@ -57,7 +89,7 @@ class StemCreator:
     def __init__(self, mixdownTrack, stemTracks, fileFormat, metadataFile = None, tags = None):
         self._mixdownTrack = mixdownTrack
         self._stemTracks   = stemTracks
-        self._format       = "alac"
+        self._format       = fileFormat if fileFormat else "alac"
         self._tags         = json.load(open(tags)) if tags else {}
 
         # Mutagen complains gravely if we do not explicitly convert the tag values to a
@@ -108,9 +140,24 @@ class StemCreator:
             converter = "ffmpeg"
             converterArgs = [converter]
 
-            converterArgs.extend(["-i"  , trackPath])
-            converterArgs.extend(["-c:a", self._format])
-            converterArgs.extend(["-c:v", "copy"])
+            if self._format == "aac":
+                aacCodec = _getAacCodec()
+                sampleRate = _getSampleRate(trackPath)
+
+                print("using " + aacCodec + " codec")
+
+                converterArgs.extend(["-i"  , trackPath])
+                converterArgs.extend(["-c:a", aacCodec])
+                converterArgs.extend(["-q:a", "0"])
+                converterArgs.extend(["-c:v", "copy"])
+                # If the sample rate is superior to 48kHz, we need to downsample to 48kHz
+                if sampleRate > 48000:
+                    print(str(sampleRate) + "Hz sample rate, downsampling to 48kHz")
+                    converterArgs.extend(["-ar", "48000"])
+            else:
+                converterArgs.extend(["-i"  , trackPath])
+                converterArgs.extend(["-c:a", "alac"])
+                converterArgs.extend(["-c:v", "copy"])
 
             converterArgs.extend([newPath])
             subprocess.check_call(converterArgs)

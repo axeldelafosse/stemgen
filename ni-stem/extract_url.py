@@ -7,8 +7,6 @@ def extract_url(input_path, output_path):
     # Open the file
     file = mutagen.File(input_path)
 
-    print(file.tags.pprint())
-
     # Check if the file contains a URL
     if "WXXX:" in file:
         # Extract the URL

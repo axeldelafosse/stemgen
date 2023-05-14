@@ -20,7 +20,7 @@ SUPPORTED_FILES = ['.wave', '.wav', '.aiff', '.aif', '.flac']
 REQUIRED_PACKAGES = ['ffmpeg', 'sox']
 
 USAGE = f"""{LOGO}
-Stem is a Stem file creator. Convert your multitrack into a stem (or two) and have fun with Traktor.
+Stem is a Stem file generator. Convert any track into a stem and have fun with Traktor.
 
 Usage: {__file__} -i [INPUT_PATH] -o [OUTPUT_PATH]
 
@@ -33,11 +33,14 @@ parser.add_argument('-i', dest='INPUT_PATH', required=True,
                     help='the path to the input file')
 parser.add_argument('-o', dest='OUTPUT_PATH', default='output',
                     help='the path to the output folder')
+parser.add_argument('-f', dest='FORMAT', default='alac',
+                    help='aac or alac')
 parser.add_argument('-v', '--version', action='version', version=VERSION)
 args = parser.parse_args()
 
 INPUT_PATH = args.INPUT_PATH
 OUTPUT_PATH = args.OUTPUT_PATH
+FORMAT = args.FORMAT
 DIR = Path(__file__).parent.absolute()
 PYTHON_EXEC = sys.executable if not None else PYTHON_EXEC
 
@@ -89,13 +92,18 @@ def convert():
     # -a           Allow aliasing above the pass-band
 
     global BIT_DEPTH
+    global SAMPLE_RATE
 
     if BIT_DEPTH == 32:
         # Downconvert to 24-bit
         subprocess.run(['sox', INPUT_PATH, '--show-progress', '-b', '24', os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.wav'), 'rate', '-v', '-a', '-I', '-s', '44100'], check=True)
         BIT_DEPTH = 24
     else:
-        subprocess.run(['sox', INPUT_PATH, '--show-progress', '--no-dither', os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.wav'), 'rate', '-v', '-a', '-I', '-s', '44100'], check=True)
+        if (FILE_EXTENSION == ".wav" or FILE_EXTENSION == ".wave") and SAMPLE_RATE == 44100:
+            print("No conversion needed.")
+            shutil.copy(INPUT_PATH, os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.wav'))
+        else:
+            subprocess.run(['sox', INPUT_PATH, '--show-progress', '--no-dither', os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.wav'), 'rate', '-v', '-a', '-I', '-s', '44100'], check=True)
 
     print("Done.")
 
@@ -104,15 +112,25 @@ def get_bit_depth():
 
     global BIT_DEPTH
 
+    result = subprocess.run(["ffprobe", "-show_streams", "-select_streams", "a", INPUT_PATH], capture_output=True, text=True)
     if FILE_EXTENSION == '.flac':
-        cmd = f'ffprobe -show_streams -select_streams a "{INPUT_PATH}" | grep bits_per_raw_sample= | sed "s/bits_per_raw_sample=//"'
+        BIT_DEPTH = int(result.stdout.strip().split("bits_per_raw_sample=")[1].split("\n")[0])
     else:
-        cmd = f'ffprobe -show_streams -select_streams a "{INPUT_PATH}" | grep bits_per_sample= | sed "s/bits_per_sample=//"'
-
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    BIT_DEPTH = int(result.stdout.strip())
+        BIT_DEPTH = int(result.stdout.strip().split("bits_per_sample=")[1].split("\n")[0])
 
     print(f"bits_per_sample={BIT_DEPTH}")
+    print("Done.")
+
+def get_sample_rate():
+    print("Extracting sample rate...")
+
+    global SAMPLE_RATE
+
+    output = subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=sample_rate", "-of", "default=noprint_wrappers=1:nokey=1", INPUT_PATH])
+    
+    SAMPLE_RATE = int(output)
+
+    print(f"sample_rate={SAMPLE_RATE}")
     print("Done.")
 
 def create_tags_json():
@@ -181,7 +199,7 @@ def create_stem():
                   f"{OUTPUT_PATH}/{FILE_NAME}/htdemucs/{FILE_NAME}/other.wav",
                   f"{OUTPUT_PATH}/{FILE_NAME}/htdemucs/{FILE_NAME}/vocals.wav"]
     stem_args += ["-x", f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}.wav", "-t", f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
-                  "-m", "metadata.json", "-f", "alac"]
+                  "-m", "metadata.json", "-f", FORMAT]
 
     subprocess.run(stem_args)
 
@@ -230,6 +248,7 @@ def setup():
         sys.exit(1)
 
     get_bit_depth()
+    get_sample_rate()
     setup_file()
     convert()
 

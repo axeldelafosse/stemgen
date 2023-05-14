@@ -38,11 +38,14 @@ parser.add_argument('-i', dest='INPUT_PATH', required=True,
                     help='the path to the input file')
 parser.add_argument('-o', dest='OUTPUT_PATH', default='output',
                     help='the path to the output folder')
+parser.add_argument('-f', dest='FORMAT', default='alac',
+                    help='aac or alac')
 parser.add_argument('-v', '--version', action='version', version=VERSION)
 args = parser.parse_args()
 
 INPUT_PATH = args.INPUT_PATH
 OUTPUT_PATH = args.OUTPUT_PATH
+FORMAT = args.FORMAT
 DIR = Path(__file__).parent.absolute()
 PYTHON_EXEC = sys.executable if not None else PYTHON_EXEC
 
@@ -149,7 +152,7 @@ def create_stem():
                     f"{INPUT_FOLDER}/{FILE_NAME}.3{FILE_EXTENSION}",
                     f"{INPUT_FOLDER}/{FILE_NAME}.4{FILE_EXTENSION}"]
         stem_args += ["-x", INPUT_PATH, "-t", f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
-                    "-m", "metadata.json", "-f", "alac",
+                    "-m", "metadata.json", "-f", FORMAT,
                     "-o", f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME} (part 1).stem.m4a"]
 
         subprocess.run(stem_args)
@@ -168,7 +171,7 @@ def create_stem():
                     f"{INPUT_FOLDER}/{FILE_NAME}.7{FILE_EXTENSION}",
                     f"{INPUT_FOLDER}/{FILE_NAME}.8{FILE_EXTENSION}"]
         stem_args += ["-x", INPUT_PATH, "-t", f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
-                    "-m", "metadata.json", "-f", "alac",
+                    "-m", "metadata.json", "-f", FORMAT,
                     "-o", f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME} (part 2).stem.m4a"]
 
         subprocess.run(stem_args)
@@ -179,7 +182,7 @@ def create_stem():
                     f"{INPUT_FOLDER}/{FILE_NAME}.3{FILE_EXTENSION}",
                     f"{INPUT_FOLDER}/{FILE_NAME}.4{FILE_EXTENSION}"]
         stem_args += ["-x", INPUT_PATH, "-t", f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
-                    "-m", "metadata.json", "-f", "alac"]
+                    "-m", "metadata.json", "-f", FORMAT]
 
         subprocess.run(stem_args)
 
