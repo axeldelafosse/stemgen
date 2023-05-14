@@ -28,7 +28,7 @@ And trust me: it's even better in real life. Can't wait to see him again!
 
 ## What?
 
-- **Highest quality**: ALAC stems by default, or AAC using the best encoder possible.
+- **Highest quality**: ALAC stems by default, or AAC using the best encoder and quality possible.
 - **Automatic metadata tagging**: scraping metadata from the master file and writing it back to the stem file.
 - **Batching**: you can use this CLI to batch your stem creation and/or create a powerful workflow.
 
@@ -52,7 +52,7 @@ You can use `stem.py` to create stems:
 
 - `$ python3 stem.py -i track/track.0.wav`
 - You need to follow this naming convention: `[TRACK_NAME].[TRACK_NUMBER].[FILE_EXTENSION]`
-- Track name should be identical for all files
+- `TRACK_NAME` should be identical for all files
 - Please use `0` as the `TRACK_NUMBER` for the master track. Example:
   `'track.0.wav'` for the master file then `'track.1.wav'` for the first stem, etc...
 - Have fun! Your new `.stem.m4a` file is in `output` dir
@@ -63,19 +63,44 @@ You can use `stem.py` to create stems:
 - `python3 -m pip install -U demucs`
 - `brew install coreutils ffmpeg sox`
 
-## Quick install on Windows
-
-- `python3 -m pip install -U demucs`
-- You might need Microsoft C++ Build Tools https://visualstudio.microsoft.com/visual-cpp-build-tools/
-  for Demucs
-- Download ffmpeg from https://www.ffmpeg.org/download.html (or install with https://github.com/dantmnf/AudioToolboxWrapper if you plan to encode in AAC)
-- Download sox from https://sourceforge.net/projects/sox/files/sox/
-- Add ffmpeg and sox to your PATH
-
 ## Quick install on Linux
 
 - `python3 -m pip install -U demucs`
 - `sudo apt install ffmpeg sox` (or install ffmpeg with https://github.com/markus-perl/ffmpeg-build-script if you plan to encode in AAC)
+
+## Long install on Windows
+
+- `python3 -m pip install -U demucs`
+- You might need Microsoft C++ Build Tools https://visualstudio.microsoft.com/visual-cpp-build-tools
+  for Demucs
+- Download ffmpeg from https://www.ffmpeg.org/download.html
+- Download sox from https://sourceforge.net/projects/sox/files/sox
+- Add ffmpeg and sox to your PATH
+
+### qaac
+
+If you plan to encode in AAC, you should install qaac. Here is a quick guide:
+
+- Download qaac from https://github.com/nu774/qaac/releases
+- Move the content of `x64` to `C:\Program Files\qaac` (or `x86` depending on your system)
+- Add `C:\Program Files\qaac` to your PATH
+
+Then, to use Audio Toolbox from Apple:
+
+- `git clone https://github.com/nu774/makeportable.git`
+- `cd makeportable`
+- Download the iTunes installer from https://www.apple.com/itunes/download/win64
+- Copy the iTunes installer to the `makeportable` folder
+- `makeportable.cmd`
+- Copy the newly created folder `QTfiles64` to your `C:\Program Files\qaac` folder
+
+Then, to support FLAC files:
+
+- Download FLAC from https://github.com/xiph/flac/releases
+- Copy the `libFLAC.dll` file from the `Win64` folder (or `Win32` depending on your system)
+- Paste it in your `C:\Program Files\qaac` folder
+
+Enjoy! You can now encode AAC stems with Apple Audio Toolbox, the highest quality AAC encoder.
 
 ## Performance
 
