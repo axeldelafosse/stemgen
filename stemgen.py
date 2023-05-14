@@ -7,6 +7,7 @@ import sys
 import subprocess
 from pathlib import Path
 import json
+import unicodedata
 
 LOGO = r"""
  _____ _____ _____ _____ _____ _____ _____ 
@@ -51,10 +52,10 @@ def get_cover():
     print("Extracting cover...")
 
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_cover_art.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_cover_art.py', FILE_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg"])
         print("Cover extracted from APIC tag.")
     else:
-        subprocess.run(['ffmpeg', '-i', INPUT_PATH, '-an', '-vcodec', 'copy', f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg", '-y'])
+        subprocess.run(['ffmpeg', '-i', FILE_PATH, '-an', '-vcodec', 'copy', f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg", '-y'])
         print("Cover extracted with ffmpeg.")
 
     print("Done.")
@@ -62,19 +63,19 @@ def get_cover():
 def get_metadata():
     print("Extracting metadata...")
 
-    subprocess.run(['ffmpeg', '-i', INPUT_PATH, '-f', 'ffmetadata', f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt", '-y'])
+    subprocess.run(['ffmpeg', '-i', FILE_PATH, '-f', 'ffmetadata', f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt", '-y'])
 
     # Get label from TPUB tag
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_label.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_label.py', FILE_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
 
     # Get genre from TCON tag
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_genre.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_genre.py', FILE_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
 
     # Get URL from WXXX tag
     if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_url.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
+        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_url.py', FILE_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
 
     print("Done.")
 
@@ -94,16 +95,27 @@ def convert():
     global BIT_DEPTH
     global SAMPLE_RATE
 
+    converted_file_path = os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.wav')
+
     if BIT_DEPTH == 32:
         # Downconvert to 24-bit
-        subprocess.run(['sox', INPUT_PATH, '--show-progress', '-b', '24', os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.wav'), 'rate', '-v', '-a', '-I', '-s', '44100'], check=True)
+        if FILE_PATH == converted_file_path:
+            subprocess.run(['sox', FILE_PATH, '--show-progress', '-b', '24', os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.24bit.wav'), 'rate', '-v', '-a', '-I', '-s', '44100'], check=True)
+            os.remove(converted_file_path)
+            os.rename(os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.24bit.wav'), converted_file_path)
+        else:
+            subprocess.run(['sox', FILE_PATH, '--show-progress', '-b', '24', converted_file_path, 'rate', '-v', '-a', '-I', '-s', '44100'], check=True)
         BIT_DEPTH = 24
     else:
         if (FILE_EXTENSION == ".wav" or FILE_EXTENSION == ".wave") and SAMPLE_RATE == 44100:
             print("No conversion needed.")
-            shutil.copy(INPUT_PATH, os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.wav'))
         else:
-            subprocess.run(['sox', INPUT_PATH, '--show-progress', '--no-dither', os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.wav'), 'rate', '-v', '-a', '-I', '-s', '44100'], check=True)
+            if FILE_PATH == converted_file_path:
+                subprocess.run(['sox', FILE_PATH, '--show-progress', '--no-dither', os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.44100Hz.wav'), 'rate', '-v', '-a', '-I', '-s', '44100'], check=True)
+                os.remove(converted_file_path)
+                os.rename(os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME+'.44100Hz.wav'), converted_file_path)
+            else:
+                subprocess.run(['sox', FILE_PATH, '--show-progress', '--no-dither', converted_file_path, 'rate', '-v', '-a', '-I', '-s', '44100'], check=True)
 
     print("Done.")
 
@@ -112,7 +124,7 @@ def get_bit_depth():
 
     global BIT_DEPTH
 
-    result = subprocess.run(["ffprobe", "-show_streams", "-select_streams", "a", INPUT_PATH], capture_output=True, text=True)
+    result = subprocess.run(["ffprobe", "-show_streams", "-select_streams", "a", FILE_PATH], capture_output=True, text=True)
     if FILE_EXTENSION == '.flac':
         BIT_DEPTH = int(result.stdout.strip().split("bits_per_raw_sample=")[1].split("\n")[0])
     else:
@@ -126,7 +138,7 @@ def get_sample_rate():
 
     global SAMPLE_RATE
 
-    output = subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=sample_rate", "-of", "default=noprint_wrappers=1:nokey=1", INPUT_PATH])
+    output = subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=sample_rate", "-of", "default=noprint_wrappers=1:nokey=1", FILE_PATH])
     
     SAMPLE_RATE = int(output)
 
@@ -182,10 +194,10 @@ def split_stems():
 
     if BIT_DEPTH == 24:
         print("Using 24-bit model...")
-        subprocess.run([PYTHON_EXEC, "-m", "demucs", "--int24", "-n", "htdemucs", "-d", "cpu", INPUT_PATH, "-o", f"{OUTPUT_PATH}/{FILE_NAME}"])
+        subprocess.run([PYTHON_EXEC, "-m", "demucs", "--int24", "-n", "htdemucs", "-d", "cpu", FILE_PATH, "-o", f"{OUTPUT_PATH}/{FILE_NAME}"])
     else:
         print("Using 16-bit model...")
-        subprocess.run([PYTHON_EXEC, "-m", "demucs", "-n", "htdemucs", "-d", "cpu", INPUT_PATH, "-o", f"{OUTPUT_PATH}/{FILE_NAME}"])
+        subprocess.run([PYTHON_EXEC, "-m", "demucs", "-n", "htdemucs", "-d", "cpu", FILE_PATH, "-o", f"{OUTPUT_PATH}/{FILE_NAME}"])
 
     print("Done.")
 
@@ -227,10 +239,6 @@ def setup():
 
     if subprocess.run([PYTHON_EXEC, "-m", "demucs", "-h"], capture_output=True, text=True).stdout.strip() == "":
         print("Please install demucs before running Stemgen.")
-        exit(2)
-
-    if not os.path.exists('ni-stem/ni-stem'):
-        print("Please install ni-stem before running Stemgen.")
         sys.exit(2)
 
     if not os.path.exists(OUTPUT_PATH):
@@ -247,16 +255,25 @@ def setup():
         print("Invalid input file format. File should be one of:", SUPPORTED_FILES)
         sys.exit(1)
 
+    setup_file()
     get_bit_depth()
     get_sample_rate()
-    setup_file()
+    get_cover()
+    get_metadata()
+    create_tags_json()
     convert()
 
     print("Ready!")
 
+def strip_accents(text):
+    text = unicodedata.normalize('NFKD', text)
+    text = text.encode('ascii', 'ignore')
+    text = text.decode("utf-8")
+    return str(text)
+
 def setup_file():
-    global FILE_NAME, INPUT_FOLDER
-    FILE_NAME = BASE_PATH.removesuffix(FILE_EXTENSION)
+    global FILE_NAME, INPUT_FOLDER, FILE_PATH
+    FILE_NAME = strip_accents(BASE_PATH.removesuffix(FILE_EXTENSION))
     INPUT_FOLDER = os.path.dirname(INPUT_PATH)
 
     if os.path.exists(f"{OUTPUT_PATH}/{FILE_NAME}"):
@@ -265,12 +282,13 @@ def setup_file():
         os.mkdir(f"{OUTPUT_PATH}/{FILE_NAME}")
         print("Working dir created.")
 
+    shutil.copy(INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}{FILE_EXTENSION}")
+    FILE_PATH = f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}{FILE_EXTENSION}"
+    print("Done.")
+
 def run():
     print(f"Creating a Stem file for {FILE_NAME}...")
 
-    get_cover()
-    get_metadata()
-    create_tags_json()
     split_stems()
     create_stem()
     clean_dir()
