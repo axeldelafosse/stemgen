@@ -22,18 +22,21 @@ REQUIRED_PACKAGES = ['ffmpeg']
 USAGE = f"""{LOGO}
 Stem is a Stem file creator. Convert your multitrack into a stem (or two) and have fun with Traktor.
 
-Usage: {__file__} -i [INPUT_PATH] -o [OUTPUT_PATH]
+Usage: python3 stem.py -i [INPUT_PATH] -o [OUTPUT_PATH]
+
+To create a stem, simply pass the master track in input.
+Example: python3 stem.py -i track.0.wav
 
 Supported input file format: {SUPPORTED_FILES}
 
 Naming convention for input files: [TRACK_NAME].[TRACK_NUMBER].[FILE_EXTENSION]
 TRACK_NAME should be identical for all files.
-Please use 0 as the TRACK_NUMBER for the master file. Example:
-'track.0.wav' for the master file then 'track.1.wav' for the first stem, etc...
+Please use 0 as the TRACK_NUMBER for the master file.
+Example: 'track.0.wav' for the master file then 'track.1.wav' for the first stem, etc...
 """
 VERSION = '1.0.0'
 
-parser = argparse.ArgumentParser(description=USAGE)
+parser = argparse.ArgumentParser(description=USAGE, formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('-i', dest='INPUT_PATH', required=True,
                     help='the path to the input file')
 parser.add_argument('-o', dest='OUTPUT_PATH', default='output',

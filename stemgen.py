@@ -20,15 +20,15 @@ SUPPORTED_FILES = ['.wave', '.wav', '.aiff', '.aif', '.flac']
 REQUIRED_PACKAGES = ['ffmpeg', 'sox']
 
 USAGE = f"""{LOGO}
-Stem is a Stem file generator. Convert any track into a stem and have fun with Traktor.
+Stemgen is a Stem file generator. Convert any track into a stem and have fun with Traktor.
 
-Usage: {__file__} -i [INPUT_PATH] -o [OUTPUT_PATH]
+Usage: python3 stemgen.py -i [INPUT_PATH] -o [OUTPUT_PATH]
 
 Supported input file format: {SUPPORTED_FILES}
 """
 VERSION = '5.0.0'
 
-parser = argparse.ArgumentParser(description=USAGE)
+parser = argparse.ArgumentParser(description=USAGE, formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('-i', dest='INPUT_PATH', required=True,
                     help='the path to the input file')
 parser.add_argument('-o', dest='OUTPUT_PATH', default='output',
