@@ -31,10 +31,12 @@ And trust me: it's even better in real life. Can't wait to see him again!
 - **Highest quality**: ALAC stems by default, or AAC using the best encoder and quality possible.
 - **Automatic metadata tagging**: scraping metadata from the master file and writing it back to the stem file.
 - **Batching**: you can use this CLI to batch your stem creation and/or create a powerful workflow.
+- **Universal**: works on macOS, Windows and Linux.
 
 ## Requirement
 
-- demucs https://github.com/facebookresearch/demucs
+- python >= 3.9 https://www.python.org
+- demucs v4 https://github.com/facebookresearch/demucs
 - ffmpeg https://www.ffmpeg.org
 - sox https://sox.sourceforge.net
 
