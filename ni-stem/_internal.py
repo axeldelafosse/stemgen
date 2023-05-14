@@ -148,7 +148,11 @@ class StemCreator:
 
                 converterArgs.extend(["-i"  , trackPath])
                 converterArgs.extend(["-c:a", aacCodec])
-                converterArgs.extend(["-q:a", "0"])
+                if aacCodec == 'aac_at':
+                    converterArgs.extend(["-q:a", "0"])
+                elif aacCodec == 'libfdk_aac':
+                    converterArgs.extend(["-vbr", "5"])
+                    # converterArgs.extend(["-cutoff", "20000"])
                 converterArgs.extend(["-c:v", "copy"])
                 # If the sample rate is superior to 48kHz, we need to downsample to 48kHz
                 if sampleRate > 48000:

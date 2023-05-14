@@ -54,25 +54,28 @@ You can use `stem.py` to create stems:
 - You need to follow this naming convention: `[TRACK_NAME].[TRACK_NUMBER].[FILE_EXTENSION]`
 - Track name should be identical for all files
 - Please use `0` as the `TRACK_NUMBER` for the master track. Example:
-  'track.0.wav' for the master file then 'track.1.wav' for the first stem, etc...
+  `'track.0.wav'` for the master file then `'track.1.wav'` for the first stem, etc...
 - Have fun! Your new `.stem.m4a` file is in `output` dir
 - Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
 
 ## Quick install on macOS
 
 - `python3 -m pip install -U demucs`
-- `brew install coreutils sox`
-- `brew tap homebrew-ffmpeg/ffmpeg`
-- `brew install homebrew-ffmpeg/ffmpeg/ffmpeg --with-fdk-aac`
+- `brew install coreutils ffmpeg sox`
 
 ## Quick install on Windows
 
 - `python3 -m pip install -U demucs`
 - You might need Microsoft C++ Build Tools https://visualstudio.microsoft.com/visual-cpp-build-tools/
   for Demucs
-- Download ffmpeg from https://www.ffmpeg.org/download.html
+- Download ffmpeg from https://www.ffmpeg.org/download.html (or install with https://github.com/dantmnf/AudioToolboxWrapper if you plan to encode in AAC)
 - Download sox from https://sourceforge.net/projects/sox/files/sox/
 - Add ffmpeg and sox to your PATH
+
+## Quick install on Linux
+
+- `python3 -m pip install -U demucs`
+- `sudo apt install ffmpeg sox` (or install ffmpeg with https://github.com/markus-perl/ffmpeg-build-script if you plan to encode in AAC)
 
 ## Performance
 
