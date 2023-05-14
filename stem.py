@@ -234,6 +234,9 @@ def setup():
         sys.exit(1)
 
     setup_file()
+    get_cover()
+    get_metadata()
+    create_tags_json()
 
     print("Ready!")
 
@@ -251,9 +254,6 @@ def setup_file():
 def run():
     print(f"Creating a Stem file for {FILE_NAME}...")
 
-    get_cover()
-    get_metadata()
-    create_tags_json()
     create_stem()
     clean_dir()
 

@@ -124,11 +124,10 @@ def get_bit_depth():
 
     global BIT_DEPTH
 
-    result = subprocess.run(["ffprobe", "-show_streams", "-select_streams", "a", FILE_PATH], capture_output=True, text=True)
     if FILE_EXTENSION == '.flac':
-        BIT_DEPTH = int(result.stdout.strip().split("bits_per_raw_sample=")[1].split("\n")[0])
+        BIT_DEPTH = int(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=bits_per_raw_sample", "-of", "default=noprint_wrappers=1:nokey=1", FILE_PATH]))
     else:
-        BIT_DEPTH = int(result.stdout.strip().split("bits_per_sample=")[1].split("\n")[0])
+        BIT_DEPTH = int(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=bits_per_sample", "-of", "default=noprint_wrappers=1:nokey=1", FILE_PATH]))
 
     print(f"bits_per_sample={BIT_DEPTH}")
     print("Done.")
@@ -138,9 +137,7 @@ def get_sample_rate():
 
     global SAMPLE_RATE
 
-    output = subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=sample_rate", "-of", "default=noprint_wrappers=1:nokey=1", FILE_PATH])
-    
-    SAMPLE_RATE = int(output)
+    SAMPLE_RATE = int(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=sample_rate", "-of", "default=noprint_wrappers=1:nokey=1", FILE_PATH]))
 
     print(f"sample_rate={SAMPLE_RATE}")
     print("Done.")
