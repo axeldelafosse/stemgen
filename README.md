@@ -68,7 +68,7 @@ You can use `stem.py` to create stems:
 ## Quick install on Linux
 
 - `python3 -m pip install -U demucs`
-- `sudo apt install ffmpeg sox` (or install ffmpeg with https://github.com/markus-perl/ffmpeg-build-script if you plan to encode in AAC)
+- `sudo apt install ffmpeg sox gpac` (or install ffmpeg with https://github.com/markus-perl/ffmpeg-build-script if you plan to encode in AAC)
 
 ## Long install on Windows
 

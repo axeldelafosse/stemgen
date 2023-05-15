@@ -344,6 +344,12 @@ class StemCreator:
         # discogs_id
         if ("discogs_release_id" in self._tags):
             tags["----:com.apple.iTunes:Discogs Id"] = mutagen.mp4.MP4FreeForm(self._tags["discogs_release_id"].encode("utf-8"))
+        # media
+        if ("media" in self._tags):
+            tags["----:com.apple.iTunes:MEDIA"] = mutagen.mp4.MP4FreeForm(self._tags["media"].encode("utf-8"))
+        # country
+        if ("country" in self._tags):
+            tags["----:com.apple.iTunes:COUNTRY"] = mutagen.mp4.MP4FreeForm(self._tags["country"].encode("utf-8"))
 
         tags["TAUT"] = "STEM"
         tags.save(outputFilePath)

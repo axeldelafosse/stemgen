@@ -7,6 +7,8 @@ import sys
 import subprocess
 from pathlib import Path
 import json
+import unicodedata
+from metadata import get_cover, get_metadata
 
 LOGO = r"""
  _____ _____ _____ _____ 
@@ -52,83 +54,7 @@ FORMAT = args.FORMAT
 DIR = Path(__file__).parent.absolute()
 PYTHON_EXEC = sys.executable if not None else "python3"
 
-def cd_root():
-    os.chdir(DIR)
-
-def get_cover():
-    print("Extracting cover...")
-
-    if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_cover_art.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg"])
-        print("Cover extracted from APIC tag.")
-    else:
-        subprocess.run(['ffmpeg', '-i', INPUT_PATH, '-an', '-vcodec', 'copy', f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg", '-y'])
-        print("Cover extracted with ffmpeg.")
-
-    print("Done.")
-
-def get_metadata():
-    print("Extracting metadata...")
-
-    subprocess.run(['ffmpeg', '-i', INPUT_PATH, '-f', 'ffmetadata', f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt", '-y'])
-
-    # Get label from TPUB tag
-    if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_label.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
-
-    # Get genre from TCON tag
-    if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_genre.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
-
-    # Get URL from WXXX tag
-    if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_url.py', INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
-
-    print("Done.")
-
-def create_tags_json():
-    print("Creating tags.json...")
-
-    os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
-
-    tags = {}
-
-    # Add metadata, e.g. `artist` `genre`
-    with open("metadata.txt", "r") as f:
-        metadata = f.read().splitlines()
-        title = ""
-        value = ""
-        for tag in metadata:
-            if tag.startswith(";FFMETADATA1"):
-                continue
-            if "=" not in tag:
-                tags[title] += tag
-                continue
-            title, value = tag.split("=", 1)
-            title = title.lower()
-            if title in ["title", "style", "artist", "remixer", "release", "album",
-                        "mix", "producer", "bpm", "genre", "catalog_no", "track_no",
-                        "track_count", "track", "date", "year", "isrc", "publisher",
-                        "label", "comment", "description", "url_discogs_artist_site",
-                        "url_discogs_release_site", "discogs_release_id",
-                        "youtube_id", "beatport_id", "qobuz_id",
-                        "copyright", "organization", "www", "album_artist",
-                        "initialkey", "key", "barcode", "upc", "lyrics", "mood"]:
-                tags[title] = value
-
-    # Add `cover`
-    if os.path.exists("cover.jpg"):
-        tags["cover"] = (f"{os.path.join(DIR, OUTPUT_PATH + '/' + FILE_NAME + '/cover.jpg')}")
-
-    with open("tags.json", "w") as f:
-        json.dump(tags, f)
-
-    with open("tags.json", "r") as f:
-        print(f.read())
-
-    os.chdir("../../")
-
-    print("Done.")
+# CREATION
 
 def create_stem():
     print("Creating stem...")
@@ -191,23 +117,10 @@ def create_stem():
 
     print("Done.")
 
-def clean_dir():
-    print("Cleaning...")
+# SETUP
 
-    os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
-    if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
-        os.rename(f"{FILE_NAME}.stem.m4a", os.path.join("..", f"{FILE_NAME}.stem.m4a"))
-    if os.path.isfile(f"{FILE_NAME} (part 1).stem.m4a"):
-        os.rename(f"{FILE_NAME} (part 1).stem.m4a", os.path.join("..", f"{FILE_NAME} (part 1).stem.m4a"))
-        if os.path.isfile(f"{FILE_NAME} (part 2).stem.m4a"):
-            os.rename(f"{FILE_NAME} (part 2).stem.m4a", os.path.join("..", f"{FILE_NAME} (part 2).stem.m4a"))
-    shutil.rmtree(os.path.join(DIR, OUTPUT_PATH + '/' + FILE_NAME))
-    input_dir = os.path.join(DIR, INPUT_FOLDER)
-    for file in os.listdir(input_dir):
-        if file.endswith(".m4a"):
-            os.remove(os.path.join(input_dir, file))
-
-    print("Done.")
+def cd_root():
+    os.chdir(DIR)
 
 def setup():
     for package in REQUIRED_PACKAGES:
@@ -234,14 +147,27 @@ def setup():
         sys.exit(1)
 
     setup_file()
-    get_cover()
-    get_metadata()
-    create_tags_json()
+    get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME)
+    get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME)
 
     print("Ready!")
 
+def run():
+    print(f"Creating a Stem file for {FILE_NAME}...")
+
+    create_stem()
+    clean_dir()
+
+    print("Success! Have fun :)")
+
+def strip_accents(text):
+    text = unicodedata.normalize('NFKD', text)
+    text = text.encode('ascii', 'ignore')
+    text = text.decode("utf-8")
+    return str(text)
+
 def setup_file():
-    global FILE_NAME, INPUT_FOLDER
+    global FILE_NAME, INPUT_FOLDER, FILE_PATH
     FILE_NAME = BASE_PATH.removesuffix(FILE_EXTENSION).removesuffix(".0")
     INPUT_FOLDER = os.path.dirname(INPUT_PATH)
 
@@ -251,13 +177,27 @@ def setup_file():
         os.mkdir(f"{OUTPUT_PATH}/{FILE_NAME}")
         print("Working dir created.")
 
-def run():
-    print(f"Creating a Stem file for {FILE_NAME}...")
+    shutil.copy(INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}{FILE_EXTENSION}")
+    FILE_PATH = f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}{FILE_EXTENSION}"
+    print("Done.")
 
-    create_stem()
-    clean_dir()
+def clean_dir():
+    print("Cleaning...")
 
-    print("Success! Have fun :)")
+    os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
+    if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
+        os.rename(f"{FILE_NAME}.stem.m4a", os.path.join("..", f"{FILE_NAME}.stem.m4a"))
+    if os.path.isfile(f"{FILE_NAME} (part 1).stem.m4a"):
+        os.rename(f"{FILE_NAME} (part 1).stem.m4a", os.path.join("..", f"{FILE_NAME} (part 1).stem.m4a"))
+        if os.path.isfile(f"{FILE_NAME} (part 2).stem.m4a"):
+            os.rename(f"{FILE_NAME} (part 2).stem.m4a", os.path.join("..", f"{FILE_NAME} (part 2).stem.m4a"))
+    shutil.rmtree(os.path.join(DIR, OUTPUT_PATH + '/' + FILE_NAME))
+    input_dir = os.path.join(DIR, INPUT_FOLDER)
+    for file in os.listdir(input_dir):
+        if file.endswith(".m4a"):
+            os.remove(os.path.join(input_dir, file))
+
+    print("Done.")
 
 cd_root()
 setup()

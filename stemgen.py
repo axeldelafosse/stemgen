@@ -6,8 +6,8 @@ import shutil
 import sys
 import subprocess
 from pathlib import Path
-import json
 import unicodedata
+from metadata import get_cover, get_metadata
 
 LOGO = r"""
  _____ _____ _____ _____ _____ _____ _____ 
@@ -45,39 +45,7 @@ FORMAT = args.FORMAT
 DIR = Path(__file__).parent.absolute()
 PYTHON_EXEC = sys.executable if not None else "python3"
 
-def cd_root():
-    os.chdir(DIR)
-
-def get_cover():
-    print("Extracting cover...")
-
-    if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_cover_art.py', FILE_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg"])
-        print("Cover extracted from APIC tag.")
-    else:
-        subprocess.run(['ffmpeg', '-i', FILE_PATH, '-an', '-vcodec', 'copy', f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg", '-y'])
-        print("Cover extracted with ffmpeg.")
-
-    print("Done.")
-
-def get_metadata():
-    print("Extracting metadata...")
-
-    subprocess.run(['ffmpeg', '-i', FILE_PATH, '-f', 'ffmetadata', f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt", '-y'])
-
-    # Get label from TPUB tag
-    if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_label.py', FILE_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
-
-    # Get genre from TCON tag
-    if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_genre.py', FILE_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
-
-    # Get URL from WXXX tag
-    if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
-        subprocess.run([PYTHON_EXEC, 'ni-stem/extract_url.py', FILE_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/metadata.txt"])
-
-    print("Done.")
+# CONVERSION AND GENERATION
 
 def convert():
     print("Converting to wav and/or downsampling...")
@@ -119,73 +87,6 @@ def convert():
 
     print("Done.")
 
-def get_bit_depth():
-    print("Extracting bit depth...")
-
-    global BIT_DEPTH
-
-    if FILE_EXTENSION == '.flac':
-        BIT_DEPTH = int(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=bits_per_raw_sample", "-of", "default=noprint_wrappers=1:nokey=1", FILE_PATH]))
-    else:
-        BIT_DEPTH = int(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=bits_per_sample", "-of", "default=noprint_wrappers=1:nokey=1", FILE_PATH]))
-
-    print(f"bits_per_sample={BIT_DEPTH}")
-    print("Done.")
-
-def get_sample_rate():
-    print("Extracting sample rate...")
-
-    global SAMPLE_RATE
-
-    SAMPLE_RATE = int(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=sample_rate", "-of", "default=noprint_wrappers=1:nokey=1", FILE_PATH]))
-
-    print(f"sample_rate={SAMPLE_RATE}")
-    print("Done.")
-
-def create_tags_json():
-    print("Creating tags.json...")
-
-    os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
-
-    tags = {}
-
-    # Add metadata, e.g. `artist` `genre`
-    with open("metadata.txt", "r") as f:
-        metadata = f.read().splitlines()
-        title = ""
-        value = ""
-        for tag in metadata:
-            if tag.startswith(";FFMETADATA1"):
-                continue
-            if "=" not in tag:
-                tags[title] += tag
-                continue
-            title, value = tag.split("=", 1)
-            title = title.lower()
-            if title in ["title", "style", "artist", "remixer", "release", "album",
-                        "mix", "producer", "bpm", "genre", "catalog_no", "track_no",
-                        "track_count", "track", "date", "year", "isrc", "publisher",
-                        "label", "comment", "description", "url_discogs_artist_site",
-                        "url_discogs_release_site", "discogs_release_id",
-                        "youtube_id", "beatport_id", "qobuz_id",
-                        "copyright", "organization", "www", "album_artist",
-                        "initialkey", "key", "barcode", "upc", "lyrics", "mood"]:
-                tags[title] = value
-
-    # Add `cover`
-    if os.path.exists("cover.jpg"):
-        tags["cover"] = (f"{os.path.join(DIR, OUTPUT_PATH + '/' + FILE_NAME + '/cover.jpg')}")
-
-    with open("tags.json", "w") as f:
-        json.dump(tags, f)
-
-    with open("tags.json", "r") as f:
-        print(f.read())
-
-    os.chdir("../../")
-
-    print("Done.")
-
 def split_stems():
     print("Splitting stems...")
 
@@ -214,19 +115,10 @@ def create_stem():
 
     print("Done.")
 
-def clean_dir():
-    print("Cleaning...")
+# SETUP
 
-    os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
-    if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
-        os.rename(f"{FILE_NAME}.stem.m4a", os.path.join("..", f"{FILE_NAME}.stem.m4a"))
-    shutil.rmtree(os.path.join(DIR, OUTPUT_PATH + '/' + FILE_NAME))
-    input_dir = os.path.join(DIR, INPUT_FOLDER)
-    for file in os.listdir(input_dir):
-        if file.endswith(".m4a"):
-            os.remove(os.path.join(input_dir, file))
-
-    print("Done.")
+def cd_root():
+    os.chdir(DIR)
 
 def setup():
     for package in REQUIRED_PACKAGES:
@@ -255,12 +147,43 @@ def setup():
     setup_file()
     get_bit_depth()
     get_sample_rate()
-    get_cover()
-    get_metadata()
-    create_tags_json()
+    get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME)
+    get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME)
     convert()
 
     print("Ready!")
+
+def run():
+    print(f"Creating a Stem file for {FILE_NAME}...")
+
+    split_stems()
+    create_stem()
+    clean_dir()
+
+    print("Success! Have fun :)")
+
+def get_bit_depth():
+    print("Extracting bit depth...")
+
+    global BIT_DEPTH
+
+    if FILE_EXTENSION == '.flac':
+        BIT_DEPTH = int(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=bits_per_raw_sample", "-of", "default=noprint_wrappers=1:nokey=1", FILE_PATH]))
+    else:
+        BIT_DEPTH = int(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=bits_per_sample", "-of", "default=noprint_wrappers=1:nokey=1", FILE_PATH]))
+
+    print(f"bits_per_sample={BIT_DEPTH}")
+    print("Done.")
+
+def get_sample_rate():
+    print("Extracting sample rate...")
+
+    global SAMPLE_RATE
+
+    SAMPLE_RATE = int(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=sample_rate", "-of", "default=noprint_wrappers=1:nokey=1", FILE_PATH]))
+
+    print(f"sample_rate={SAMPLE_RATE}")
+    print("Done.")
 
 def strip_accents(text):
     text = unicodedata.normalize('NFKD', text)
@@ -283,14 +206,19 @@ def setup_file():
     FILE_PATH = f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}{FILE_EXTENSION}"
     print("Done.")
 
-def run():
-    print(f"Creating a Stem file for {FILE_NAME}...")
+def clean_dir():
+    print("Cleaning...")
 
-    split_stems()
-    create_stem()
-    clean_dir()
+    os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
+    if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
+        os.rename(f"{FILE_NAME}.stem.m4a", os.path.join("..", f"{FILE_NAME}.stem.m4a"))
+    shutil.rmtree(os.path.join(DIR, OUTPUT_PATH + '/' + FILE_NAME))
+    input_dir = os.path.join(DIR, INPUT_FOLDER)
+    for file in os.listdir(input_dir):
+        if file.endswith(".m4a"):
+            os.remove(os.path.join(input_dir, file))
 
-    print("Success! Have fun :)")
+    print("Done.")
 
 cd_root()
 setup()
