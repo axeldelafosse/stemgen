@@ -9,7 +9,7 @@ Stemgen uses `demucs` to separate the 4 stems and `ni-stem` to create the Stem f
 ![Screenshot Before](./screenshots/before.png)
 ![Screenshot After](./screenshots/after.png)
 
-Our new file contains four stems: bass, drums, vocals and other.
+Our new file contains four stems: drums, bass, other (melody) and vocals.
 
 ## Why?
 
