@@ -111,7 +111,8 @@ def create_stem():
                     f"{INPUT_FOLDER}/{FILE_NAME}.3{FILE_EXTENSION}",
                     f"{INPUT_FOLDER}/{FILE_NAME}.4{FILE_EXTENSION}"]
         stem_args += ["-x", INPUT_PATH, "-t", f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
-                    "-m", "metadata.json", "-f", FORMAT]
+                    "-m", "metadata.json", "-f", FORMAT,
+                    "-o", f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}.stem.m4a"]
 
         subprocess.run(stem_args)
 
