@@ -36,7 +36,8 @@ def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
 
     # Extract metadata with mutagen
     file = mutagen.File(FILE_PATH)
-    print(file.tags.pprint())
+    if file.tags is not None:
+        print(file.tags.pprint())
 
     TAGS = {}
 
