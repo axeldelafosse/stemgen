@@ -18,8 +18,8 @@ LOGO = r"""
 
 """
 
-SUPPORTED_FILES = ['.wave', '.wav', '.aiff', '.aif', '.flac']
-REQUIRED_PACKAGES = ['ffmpeg']
+SUPPORTED_FILES = [".wave", ".wav", ".aiff", ".aif", ".flac"]
+REQUIRED_PACKAGES = ["ffmpeg"]
 
 USAGE = f"""{LOGO}
 Stem is a Stem file creator. Convert your multitrack into a stem (or two) and have fun with Traktor.
@@ -36,16 +36,19 @@ TRACK_NAME should be identical for all files.
 Please use 0 as the TRACK_NUMBER for the master file.
 Example: 'track.0.wav' for the master file then 'track.1.wav' for the first stem, etc...
 """
-VERSION = '1.0.0'
+VERSION = "1.0.0"
 
-parser = argparse.ArgumentParser(description=USAGE, formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument('-i', dest='INPUT_PATH', required=True,
-                    help='the path to the input file')
-parser.add_argument('-o', dest='OUTPUT_PATH', default='output',
-                    help='the path to the output folder')
-parser.add_argument('-f', dest='FORMAT', default='alac',
-                    help='aac or alac')
-parser.add_argument('-v', '--version', action='version', version=VERSION)
+parser = argparse.ArgumentParser(
+    description=USAGE, formatter_class=argparse.RawTextHelpFormatter
+)
+parser.add_argument(
+    "-i", dest="INPUT_PATH", required=True, help="the path to the input file"
+)
+parser.add_argument(
+    "-o", dest="OUTPUT_PATH", default="output", help="the path to the output folder"
+)
+parser.add_argument("-f", dest="FORMAT", default="alac", help="aac or alac")
+parser.add_argument("-v", "--version", action="version", version=VERSION)
 args = parser.parse_args()
 
 INPUT_PATH = args.INPUT_PATH
@@ -55,6 +58,7 @@ DIR = Path(__file__).parent.absolute()
 PYTHON_EXEC = sys.executable if not None else "python3"
 
 # CREATION
+
 
 def create_stem():
     print("Creating stem...")
@@ -70,58 +74,94 @@ def create_stem():
         # Open tags.json and edit the title
         with open(f"{OUTPUT_PATH}/{FILE_NAME}/tags.json", "r+") as f:
             tags = json.load(f)
-            tags["title"] = f"{tags['title']} (part 1)"
+            tags["title"] = f"{tags['title']} [part 1]"
             f.seek(0)
             json.dump(tags, f)
             f.truncate()
 
         stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
-        stem_args += [f"{INPUT_FOLDER}/{FILE_NAME}.1{FILE_EXTENSION}",
-                    f"{INPUT_FOLDER}/{FILE_NAME}.2{FILE_EXTENSION}",
-                    f"{INPUT_FOLDER}/{FILE_NAME}.3{FILE_EXTENSION}",
-                    f"{INPUT_FOLDER}/{FILE_NAME}.4{FILE_EXTENSION}"]
-        stem_args += ["-x", INPUT_PATH, "-t", f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
-                    "-m", "metadata.json", "-f", FORMAT,
-                    "-o", f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME} (part 1).stem.m4a"]
+        stem_args += [
+            f"{INPUT_FOLDER}/{FILE_NAME}.1{FILE_EXTENSION}",
+            f"{INPUT_FOLDER}/{FILE_NAME}.2{FILE_EXTENSION}",
+            f"{INPUT_FOLDER}/{FILE_NAME}.3{FILE_EXTENSION}",
+            f"{INPUT_FOLDER}/{FILE_NAME}.4{FILE_EXTENSION}",
+        ]
+        stem_args += [
+            "-x",
+            INPUT_PATH,
+            "-t",
+            f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
+            "-m",
+            "metadata.json",
+            "-f",
+            FORMAT,
+            "-o",
+            f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME} [part 1].stem.m4a",
+        ]
 
         subprocess.run(stem_args)
 
         # Open tags.json and edit the title (again)
         with open(f"{OUTPUT_PATH}/{FILE_NAME}/tags.json", "r+") as f:
             tags = json.load(f)
-            tags["title"] = tags['title'].replace(" (part 1)", " (part 2)")
+            tags["title"] = tags["title"].replace(" [part 1]", " [part 2]")
             f.seek(0)
             json.dump(tags, f)
             f.truncate()
 
         stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
-        stem_args += [f"{INPUT_FOLDER}/{FILE_NAME}.5{FILE_EXTENSION}",
-                    f"{INPUT_FOLDER}/{FILE_NAME}.6{FILE_EXTENSION}",
-                    f"{INPUT_FOLDER}/{FILE_NAME}.7{FILE_EXTENSION}",
-                    f"{INPUT_FOLDER}/{FILE_NAME}.8{FILE_EXTENSION}"]
-        stem_args += ["-x", INPUT_PATH, "-t", f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
-                    "-m", "metadata.json", "-f", FORMAT,
-                    "-o", f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME} (part 2).stem.m4a"]
+        stem_args += [
+            f"{INPUT_FOLDER}/{FILE_NAME}.5{FILE_EXTENSION}",
+            f"{INPUT_FOLDER}/{FILE_NAME}.6{FILE_EXTENSION}",
+            f"{INPUT_FOLDER}/{FILE_NAME}.7{FILE_EXTENSION}",
+            f"{INPUT_FOLDER}/{FILE_NAME}.8{FILE_EXTENSION}",
+        ]
+        stem_args += [
+            "-x",
+            INPUT_PATH,
+            "-t",
+            f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
+            "-m",
+            "metadata.json",
+            "-f",
+            FORMAT,
+            "-o",
+            f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME} [part 2].stem.m4a",
+        ]
 
         subprocess.run(stem_args)
     else:
         stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
-        stem_args += [f"{INPUT_FOLDER}/{FILE_NAME}.1{FILE_EXTENSION}",
-                    f"{INPUT_FOLDER}/{FILE_NAME}.2{FILE_EXTENSION}",
-                    f"{INPUT_FOLDER}/{FILE_NAME}.3{FILE_EXTENSION}",
-                    f"{INPUT_FOLDER}/{FILE_NAME}.4{FILE_EXTENSION}"]
-        stem_args += ["-x", INPUT_PATH, "-t", f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
-                    "-m", "metadata.json", "-f", FORMAT,
-                    "-o", f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}.stem.m4a"]
+        stem_args += [
+            f"{INPUT_FOLDER}/{FILE_NAME}.1{FILE_EXTENSION}",
+            f"{INPUT_FOLDER}/{FILE_NAME}.2{FILE_EXTENSION}",
+            f"{INPUT_FOLDER}/{FILE_NAME}.3{FILE_EXTENSION}",
+            f"{INPUT_FOLDER}/{FILE_NAME}.4{FILE_EXTENSION}",
+        ]
+        stem_args += [
+            "-x",
+            INPUT_PATH,
+            "-t",
+            f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
+            "-m",
+            "metadata.json",
+            "-f",
+            FORMAT,
+            "-o",
+            f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}.stem.m4a",
+        ]
 
         subprocess.run(stem_args)
 
     print("Done.")
 
+
 # SETUP
+
 
 def cd_root():
     os.chdir(DIR)
+
 
 def setup():
     for package in REQUIRED_PACKAGES:
@@ -129,7 +169,7 @@ def setup():
             print(f"Please install {package} before running Stem.")
             sys.exit(2)
 
-    if not os.path.exists('ni-stem/ni-stem'):
+    if not os.path.exists("ni-stem/ni-stem"):
         print("Please install ni-stem before running Stem.")
         sys.exit(2)
 
@@ -153,6 +193,7 @@ def setup():
 
     print("Ready!")
 
+
 def run():
     print(f"Creating a Stem file for {FILE_NAME}...")
 
@@ -161,11 +202,13 @@ def run():
 
     print("Success! Have fun :)")
 
+
 def strip_accents(text):
-    text = unicodedata.normalize('NFKD', text)
-    text = text.encode('ascii', 'ignore')
+    text = unicodedata.normalize("NFKD", text)
+    text = text.encode("ascii", "ignore")
     text = text.decode("utf-8")
     return str(text)
+
 
 def setup_file():
     global FILE_NAME, INPUT_FOLDER, FILE_PATH
@@ -182,23 +225,31 @@ def setup_file():
     FILE_PATH = f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}{FILE_EXTENSION}"
     print("Done.")
 
+
 def clean_dir():
     print("Cleaning...")
 
     os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
     if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
         os.rename(f"{FILE_NAME}.stem.m4a", os.path.join("..", f"{FILE_NAME}.stem.m4a"))
-    if os.path.isfile(f"{FILE_NAME} (part 1).stem.m4a"):
-        os.rename(f"{FILE_NAME} (part 1).stem.m4a", os.path.join("..", f"{FILE_NAME} (part 1).stem.m4a"))
-        if os.path.isfile(f"{FILE_NAME} (part 2).stem.m4a"):
-            os.rename(f"{FILE_NAME} (part 2).stem.m4a", os.path.join("..", f"{FILE_NAME} (part 2).stem.m4a"))
-    shutil.rmtree(os.path.join(DIR, OUTPUT_PATH + '/' + FILE_NAME))
+    if os.path.isfile(f"{FILE_NAME} [part 1].stem.m4a"):
+        os.rename(
+            f"{FILE_NAME} [part 1].stem.m4a",
+            os.path.join("..", f"{FILE_NAME} [part 1].stem.m4a"),
+        )
+        if os.path.isfile(f"{FILE_NAME} [part 2].stem.m4a"):
+            os.rename(
+                f"{FILE_NAME} [part 2].stem.m4a",
+                os.path.join("..", f"{FILE_NAME} [part 2].stem.m4a"),
+            )
+    shutil.rmtree(os.path.join(DIR, OUTPUT_PATH + "/" + FILE_NAME))
     input_dir = os.path.join(DIR, INPUT_FOLDER)
     for file in os.listdir(input_dir):
         if file.endswith(".m4a"):
             os.remove(os.path.join(input_dir, file))
 
     print("Done.")
+
 
 cd_root()
 setup()

@@ -4,13 +4,15 @@ import os
 import sys
 import subprocess
 import json
+
 sys.path.append(os.path.abspath("ni-stem/mutagen"))
 import mutagen
+
 
 def get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME):
     print("Extracting cover...")
 
-    if FILE_EXTENSION in ('.wav', '.wave', '.aif', '.aiff'):
+    if FILE_EXTENSION in (".wav", ".wave", ".aif", ".aiff"):
         # Open the file
         file = mutagen.File(FILE_PATH)
 
@@ -26,10 +28,22 @@ def get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME):
         else:
             print("Error: The file does not contain any cover art.")
     else:
-        subprocess.run(['ffmpeg', '-i', FILE_PATH, '-an', '-vcodec', 'copy', f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg", '-y'])
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-i",
+                FILE_PATH,
+                "-an",
+                "-vcodec",
+                "copy",
+                f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg",
+                "-y",
+            ]
+        )
         print("Cover extracted with ffmpeg.")
 
     print("Done.")
+
 
 def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
     print("Extracting metadata...")
@@ -52,7 +66,7 @@ def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
         TAGS["artist"] = file["TPE1"].text[0]
     if "ARTIST" in file:
         TAGS["artist"] = file["ARTIST"][0]
-    
+
     # `album`
     if "TALB" in file:
         TAGS["album"] = file["TALB"].text[0]
@@ -90,35 +104,35 @@ def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
         TAGS["track_no"] = file["TRCK"].text[0]
     if "TRACKNUMBER" in file:
         TAGS["track_no"] = file["TRACKNUMBER"][0]
-    
+
     # `track_count`
     if "TOTALTRACKS" in file:
         TAGS["track_count"] = file["TOTALTRACKS"][0]
-    
+
     # `bpm`
     if "TBPM" in file:
         TAGS["bpm"] = file["TBPM"].text[0]
     if "BPM" in file:
         TAGS["bpm"] = file["BPM"][0]
-    
+
     # `key`
     if "TKEY" in file:
         TAGS["key"] = file["TKEY"].text[0]
     if "KEY" in file:
         TAGS["key"] = file["KEY"][0]
-    
+
     # `initialkey`
     if "TKEY" in file:
         TAGS["initialkey"] = file["TKEY"].text[0]
     if "INITIALKEY" in file:
         TAGS["initialkey"] = file["INITIALKEY"][0]
-    
+
     # `remixer`
     if "TPE4" in file:
         TAGS["remixer"] = file["TPE4"].text[0]
     if "REMIXER" in file:
         TAGS["remixer"] = file["REMIXER"][0]
-    
+
     # `mix`
     if "TXXX:MIX" in file:
         TAGS["mix"] = file["TXXX:MIX"].text[0]
@@ -130,7 +144,7 @@ def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
         TAGS["producer"] = file["TXXX:PRODUCER"].text[0]
     if "PRODUCER" in file:
         TAGS["producer"] = file["PRODUCER"][0]
-    
+
     # `catalog_no`
     if "TXXX:CATALOGNUMBER" in file:
         TAGS["catalog_no"] = file["TXXX:CATALOGNUMBER"].text[0]
@@ -142,67 +156,67 @@ def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
         TAGS["discogs_release_id"] = file["TXXX:DISCOGS_RELEASE_ID"].text[0]
     if "DISCOGS_RELEASE_ID" in file:
         TAGS["discogs_release_id"] = file["DISCOGS_RELEASE_ID"][0]
-    
+
     # `url_discogs_release_site`
     if "WXXX:DISCOGS_RELEASE_SITE" in file:
         TAGS["url_discogs_release_site"] = file["WXXX:DISCOGS_RELEASE_SITE"].text[0]
     if "URL_DISCOGS_RELEASE_SITE" in file:
         TAGS["url_discogs_release_site"] = file["URL_DISCOGS_RELEASE_SITE"][0]
-    
+
     # `url_discogs_artist_site`
     if "WXXX:DISCOGS_ARTIST_SITE" in file:
         TAGS["url_discogs_artist_site"] = file["WXXX:DISCOGS_ARTIST_SITE"].text[0]
     if "URL_DISCOGS_ARTIST_SITE" in file:
         TAGS["url_discogs_artist_site"] = file["URL_DISCOGS_ARTIST_SITE"][0]
-    
+
     # `youtube_id`
     if "TXXX:YOUTUBE_ID" in file:
         TAGS["youtube_id"] = file["TXXX:YOUTUBE_ID"].text[0]
     if "YOUTUBE_ID" in file:
         TAGS["youtube_id"] = file["YOUTUBE_ID"][0]
-    
+
     # `beatport_id`
     if "TXXX:BEATPORT_ID" in file:
         TAGS["beatport_id"] = file["TXXX:BEATPORT_ID"].text[0]
     if "BEATPORT_ID" in file:
         TAGS["beatport_id"] = file["BEATPORT_ID"][0]
-    
+
     # `qobuz_id`
     if "TXXX:QOBUZ_ID" in file:
         TAGS["qobuz_id"] = file["TXXX:QOBUZ_ID"].text[0]
     if "QOBUZ_ID" in file:
         TAGS["qobuz_id"] = file["QOBUZ_ID"][0]
-    
+
     # `lyrics`
     if "USLT" in file:
         TAGS["lyrics"] = file["USLT"].text[0]
     if "LYRICS" in file:
         TAGS["lyrics"] = file["LYRICS"][0]
-    
+
     # `mood`
     if "TXXX:MOOD" in file:
         TAGS["mood"] = file["TXXX:MOOD"].text[0]
     if "MOOD" in file:
         TAGS["mood"] = file["MOOD"][0]
-    
+
     # `comment`
     if "COMM" in file:
         TAGS["comment"] = file["COMM"].text[0]
     if "COMMENT" in file:
         TAGS["comment"] = file["COMMENT"][0]
-    
+
     # `description`
     if "TXXX:DESCRIPTION" in file:
         TAGS["description"] = file["TXXX:DESCRIPTION"].text[0]
     if "DESCRIPTION" in file:
         TAGS["description"] = file["DESCRIPTION"][0]
-    
+
     # `barcode`
     if "TXXX:BARCODE" in file:
         TAGS["barcode"] = file["TXXX:BARCODE"].text[0]
     if "BARCODE" in file:
         TAGS["barcode"] = file["BARCODE"][0]
-    
+
     # `upc`
     if "TXXX:UPC" in file:
         TAGS["upc"] = file["TXXX:UPC"].text[0]
@@ -214,25 +228,25 @@ def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
         TAGS["isrc"] = file["TSRC"].text[0]
     if "ISRC" in file:
         TAGS["isrc"] = file["ISRC"][0]
-    
+
     # `www`
     if "TXXX:WWW" in file:
         TAGS["www"] = file["TXXX:WWW"].text[0]
     if "WWW" in file:
         TAGS["www"] = file["WWW"][0]
-    
+
     # `album_artist`
     if "TPE2" in file:
         TAGS["album_artist"] = file["TPE2"].text[0]
     if "ALBUMARTIST" in file:
         TAGS["album_artist"] = file["ALBUMARTIST"][0]
-    
+
     # `style`
     if "TXXX:STYLE" in file:
         TAGS["style"] = file["TXXX:STYLE"].text[0]
     if "STYLE" in file:
         TAGS["style"] = file["STYLE"][0]
-    
+
     # `track`
     if "TPOS" in file:
         TAGS["track"] = file["TPOS"].text[0]
@@ -257,7 +271,7 @@ def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
 
     # `cover`
     if os.path.exists(os.path.join(OUTPUT_PATH, FILE_NAME, "cover.jpg")):
-        TAGS["cover"] = (f"{os.path.join(DIR, OUTPUT_PATH, FILE_NAME, 'cover.jpg')}")
+        TAGS["cover"] = f"{os.path.join(DIR, OUTPUT_PATH, FILE_NAME, 'cover.jpg')}"
 
     print(TAGS)
 

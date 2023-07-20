@@ -107,7 +107,7 @@ Enjoy! You can now encode AAC stems with Apple Audio Toolbox, the highest qualit
 ## Performance
 
 - Stem and Stemgen supports 16-bit and 24-bit audio files!
-- Stemgen needs to downsample the track to 44.1kHz to avoid problems with the separation software because the models are trained on 44.1kHz audio files.
+- Stemgen needs to downsample the track to 44.1kHz to avoid problems with the separation software because the models are trained on 44.1kHz audio files. Stem uses the original sample rate.
 - You may notice that the output file is pretty big. Apple Lossless Codec (ALAC) for audio encoding is used for lossless audio compression at the cost of increased file size.
 
 ![Screenshot Input](./screenshots/flac.png)
