@@ -34,9 +34,13 @@ collection = TraktorCollection(path=Path(args.collection))
 
 for part1 in collection.nml.collection.entry:
     # Check if part 1 of stem file
-    if part1.stems and (
-        part1.location.file.endswith("[part 1].stem.m4a")
-        or part1.location.file.endswith("[part 1].stem.mp4")
+    if (
+        part1.stems
+        and part1.lock == 0
+        and (
+            part1.location.file.endswith("[part 1].stem.m4a")
+            or part1.location.file.endswith("[part 1].stem.mp4")
+        )
     ):
         print(part1.location.file)
 
