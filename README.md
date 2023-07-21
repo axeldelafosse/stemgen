@@ -50,6 +50,8 @@ You can use `stemgen.py` to generate stems:
 
 ## Bring your own stems
 
+### Manually
+
 You can use `stem.py` to create stems:
 
 - `$ python3 stem.py -i track/track.0.wav`
@@ -59,6 +61,12 @@ You can use `stem.py` to create stems:
   `'track.0.wav'` for the master file then `'track.1.wav'` for the first stem, etc...
 - Have fun! Your new `.stem.m4a` file is in `output` dir
 - Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
+
+### With Ableton Live
+
+You can use Ableton Live to create stems:
+
+- `$ python3 ableton.py`
 
 ## Quick install on macOS
 

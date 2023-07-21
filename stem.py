@@ -35,6 +35,8 @@ Naming convention for input files: [TRACK_NAME].[TRACK_NUMBER].[FILE_EXTENSION]
 TRACK_NAME should be identical for all files.
 Please use 0 as the TRACK_NUMBER for the master file.
 Example: 'track.0.wav' for the master file then 'track.1.wav' for the first stem, etc...
+
+You can also use ableton.py to automatically create the stems from Ableton Live.
 """
 VERSION = "1.0.0"
 
@@ -92,7 +94,7 @@ def create_stem():
             "-t",
             f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
             "-m",
-            "metadata.json",
+            "metadata.part1.json",
             "-f",
             FORMAT,
             "-o",
@@ -122,7 +124,7 @@ def create_stem():
             "-t",
             f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
             "-m",
-            "metadata.json",
+            "metadata.part2.json",
             "-f",
             FORMAT,
             "-o",

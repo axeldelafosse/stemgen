@@ -58,8 +58,10 @@ def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
     # `title`
     if "TIT2" in file:
         TAGS["title"] = file["TIT2"].text[0]
-    if "TITLE" in file:
+    elif "TITLE" in file:
         TAGS["title"] = file["TITLE"][0]
+    else:
+        TAGS["title"] = FILE_NAME
 
     # `artist`
     if "TPE1" in file:
@@ -281,3 +283,108 @@ def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
         json.dump(TAGS, f)
 
     print("Done.")
+
+
+def create_metadata_json(stems, path):
+    print(stems)
+
+    metadata = {
+        "mastering_dsp": {
+            "compressor": {
+                "enabled": False,
+                "ratio": 3,
+                "output_gain": 0.5,
+                "release": 0.300000011920929,
+                "attack": 0.003000000026077032,
+                "input_gain": 0.5,
+                "threshold": 0,
+                "hp_cutoff": 300,
+                "dry_wet": 50,
+            },
+            "limiter": {
+                "enabled": False,
+                "release": 0.05000000074505806,
+                "threshold": 0,
+                "ceiling": -0.3499999940395355,
+            },
+        },
+        "version": 1,
+        "stems": stems,
+    }
+
+    with open(path, "w") as f:
+        json.dump(metadata, f)
+
+
+ableton_color_index_to_hex = {
+    0: "#F099A7",
+    1: "#F2A948",
+    2: "#C49B40",
+    3: "#F7F48D",
+    4: "#CBF94F",
+    5: "#77FB58",
+    6: "#79FBAF",
+    7: "#8DFCE8",
+    8: "#97C3FA",
+    9: "#5E7FDD",
+    10: "#96A6F9",
+    11: "#CA72DE",
+    12: "#D45D9E",
+    13: "#FFFFFF",
+    14: "#EB4A41",
+    15: "#E5742E",
+    16: "#937451",
+    17: "#FCF15E",
+    18: "#A5FC7C",
+    19: "#67C039",
+    20: "#56BCAF",
+    21: "#6DE6FC",
+    22: "#4BA1E8",
+    23: "#367BBB",
+    24: "#836DDD",
+    25: "#AD7AC1",
+    26: "#EB4CCE",
+    27: "#D0D0D0",
+    28: "#D36E60",
+    29: "#F2A77C",
+    30: "#CDAE79",
+    31: "#F0FEB7",
+    32: "#D5E3A0",
+    33: "#BECF7F",
+    34: "#A3C392",
+    35: "#DCFCE3",
+    36: "#D4F0F7",
+    37: "#BBC1E0",
+    38: "#CABCE1",
+    39: "#AA99E0",
+    40: "#E3DCE1",
+    41: "#A9A9A9",
+    42: "#BE948D",
+    43: "#AF845D",
+    44: "#95846D",
+    45: "#BEBA74",
+    46: "#ABBD3B",
+    47: "#88AF5A",
+    48: "#94C0BA",
+    49: "#A0B2C2",
+    50: "#8BA4BF",
+    51: "#8693C7",
+    52: "#A296B3",
+    53: "#BAA0BC",
+    54: "#B27595",
+    55: "#7B7B7B",
+    56: "#A13D38",
+    57: "#9E5639",
+    58: "#6D5043",
+    59: "#D7C440",
+    60: "#889637",
+    61: "#669D42",
+    62: "#469A8E",
+    63: "#356281",
+    64: "#1F2E90",
+    65: "#37519D",
+    66: "#5E4CA7",
+    67: "#9850A8",
+    68: "#BC3D6D",
+    69: "#3C3C3C",
+}
