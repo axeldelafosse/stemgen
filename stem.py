@@ -6,6 +6,7 @@ import shutil
 import sys
 import subprocess
 from pathlib import Path
+import time
 import json
 import unicodedata
 from metadata import get_cover, get_metadata
@@ -230,6 +231,9 @@ def setup_file():
 
 def clean_dir():
     print("Cleaning...")
+
+    if os.name == "nt":
+        time.sleep(5)
 
     os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
     if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
