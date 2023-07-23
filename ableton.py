@@ -2,13 +2,14 @@
 
 # Stemgen for Ableton Live
 
-# Installation (macOS):
+# Installation:
 # `pip install opencv-python`
-# `pip install pyobjc-core`
-# `pip install pyobjc`
+# Only on macOS: `pip install pyobjc-core`
+# Only on macOS: `pip install pyobjc`
 # `pip install pyautogui`
 # `pip install pylive`
 # Also install https://github.com/ideoforms/AbletonOSC as a Remote Script
+# Only on Windows: you can install https://github.com/p-groarke/wsay/releases to get audio feedback
 
 # Usage:
 # Open Ableton Live
@@ -20,34 +21,52 @@
 # Don't touch your computer until it's done
 # Enjoy your stems!
 
-from os import system
+import os
+import platform
 import sys
 import subprocess
-
 import live
-import pyautogui, subprocess, time, logging
+import pyautogui
+import time
+import logging
 from metadata import create_metadata_json, ableton_color_index_to_hex
-
-import pyscreeze
-import PIL
-
-# https://github.com/asweigart/pyautogui/issues/790
-__PIL_TUPLE_VERSION = tuple(int(x) for x in PIL.__version__.split("."))
-pyscreeze.PIL__version__ = __PIL_TUPLE_VERSION
 
 # Settings
 NAME = "track"
-IS_RETINA = True
-OS = "macos"  # macos or windows
+IS_RETINA = False
+OS = "windows" if platform.system() == "Windows" else "macos"
 PYTHON_EXEC = sys.executable if not None else "python3"
 STEMS = []
 
+# https://github.com/asweigart/pyautogui/issues/790
+if OS == "macos":
+    import pyscreeze
+    import PIL
+
+    __PIL_TUPLE_VERSION = tuple(int(x) for x in PIL.__version__.split("."))
+    pyscreeze.PIL__version__ = __PIL_TUPLE_VERSION
+
+
+def say(text):
+    if OS == "windows":
+        os.system("wsay " + text)
+    else:
+        os.system("say " + text)
+    return
 
 # Switch to Ableton Live
 def switch_to_ableton():
+    print("Looking for Ableton Live...")
+    if OS == "windows":
+        ableton = pyautogui.getWindowsWithTitle("Ableton Live")[0]
+        if ableton != None:
+            print("Found it!")
+            ableton.activate()
+            ableton.maximize()
+            return
+
     pyautogui.keyDown("command")
     pyautogui.press("tab")
-    print("Looking for Live icon...")
     time.sleep(1)
     x, y = pyautogui.locateCenterOnScreen(
         "screenshots/" + OS + "/logo.png", confidence=0.9
@@ -64,9 +83,12 @@ def switch_to_ableton():
 # Get the solo-ed tracks locations
 def get_solo_tracks_locations():
     print("Looking for solo-ed tracks...")
-    locations = pyautogui.locateAllOnScreen(
-        "screenshots/" + OS + "/solo.png", confidence=0.9
-    )
+    if OS == "windows":
+        locations = pyautogui.locateAllOnScreen("screenshots/windows/solo.png")
+    else:
+        locations = pyautogui.locateAllOnScreen(
+            "screenshots/" + OS + "/solo.png", confidence=0.9
+        )
     if locations == None:
         pyautogui.alert("You need to solo the tracks you want to export.")
         exit()
@@ -99,7 +121,10 @@ def export(set, location, count):
         STEMS.append({"color": color, "name": name})
 
     # Export the track
-    pyautogui.hotkey("command", "shift", "r")
+    if OS == "windows":
+        pyautogui.hotkey("ctrl", "shift", "r")
+    else:
+        pyautogui.hotkey("command", "shift", "r")
     pyautogui.press("enter")
     time.sleep(1)
     pyautogui.typewrite(NAME + "." + str(count) + ".aif")
@@ -110,9 +135,12 @@ def export(set, location, count):
     # Wait for the export to finish
     time.sleep(1)
     while True:
-        location = pyautogui.locateOnScreen(
-            "screenshots/" + OS + "/export.png", confidence=0.9
-        )
+        if OS == "windows":
+            location = pyautogui.locateOnScreen("screenshots/windows/export.png")
+        else:
+            location = pyautogui.locateOnScreen(
+                "screenshots/" + OS + "/export.png", confidence=0.9
+            )
         if location != None:
             print("Exporting...")
         else:
@@ -143,18 +171,24 @@ def main():
     print("File name: " + NAME)
 
     # Check Retina Display
-    global IS_RETINA
-    if (
-        subprocess.call(
-            "system_profiler SPDisplaysDataType | grep 'Retina'", shell=True
-        )
-        == 0
-    ):
-        IS_RETINA = True
-    else:
-        IS_RETINA = False
+    if OS == "macos":
+        global IS_RETINA
+        if (
+            subprocess.call(
+                "system_profiler SPDisplaysDataType | grep 'Retina'", shell=True
+            )
+            == 0
+        ):
+            IS_RETINA = True
+        else:
+            IS_RETINA = False
+        
+        print("Retina Display: " + str(IS_RETINA))
 
-    print("Retina Display: " + str(IS_RETINA))
+    # Get Ableton Live set
+    set = live.Set()
+    set.scan(scan_clip_names=True, scan_device=True)
+    # TODO: resize all tracks so they all fit on the screen
 
     switch_to_ableton()
     time.sleep(1)
@@ -162,17 +196,17 @@ def main():
     locations = list(get_solo_tracks_locations())
     if len(locations) == 0:
         print("You need to solo the tracks you want to export as stems.")
-        system("say Oops")
+        say("Oops")
         exit()
 
     if len(locations) < 4:
         print("You need to solo at least 4 tracks.")
-        system("say Oops")
+        say("Oops")
         exit()
 
     if len(locations) > 8:
         print("You can't create stems with more than 8 tracks.")
-        system("say Oops")
+        say("Oops")
         exit()
 
     print("Found " + str(len(locations)) + " solo-ed tracks.")
@@ -190,8 +224,9 @@ def main():
         pyautogui.click()
     pyautogui.keyUp("command")
 
-    set = live.Set()
-    set.scan(scan_clip_names=True, scan_device=True)
+    for track in set.tracks:
+        if track.solo:
+            track.solo = False
 
     # Export master
     export(set, location, 0)
@@ -202,20 +237,41 @@ def main():
         export(set, location, i)
         i += 1
 
-    pyautogui.keyDown("command")
-    pyautogui.press("tab")
-    pyautogui.keyUp("command")
+    # Switch to Terminal
+    if OS == "windows":
+        cmd = pyautogui.getWindowsWithTitle("Command Prompt")[0]
+        if cmd != None:
+            cmd.activate()
+    else:
+        pyautogui.keyDown("command")
+        pyautogui.press("tab")
+        pyautogui.keyUp("command")
 
     # Create metadata.part1.json and metadata.part2.json if double stems
     if len(locations) == 8:
         create_metadata_json(STEMS[:4], "metadata.part1.json")
         create_metadata_json(STEMS[4:], "metadata.part2.json")
 
-    # Now create the stem file(s)
-    subprocess.run([PYTHON_EXEC, "stem.py", "-i", "input/" + NAME + ".0.aif"])
+    # Create the stem file(s)
+    if OS == "windows":
+        subprocess.run([
+            PYTHON_EXEC,
+            "stem.py",
+            "-i",
+            "input/" + NAME + ".0.aif",
+            "-f",
+            "aac",
+        ])
+    else:
+        subprocess.run([
+            PYTHON_EXEC,
+            "stem.py",
+            "-i",
+            "input/" + NAME + ".0.aif"
+        ])
 
     print("Done! Enjoy :)")
-    system("say Done")
+    say("Done")
     return
 
 

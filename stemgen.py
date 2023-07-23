@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import platform
 import shutil
 import sys
 import subprocess
@@ -384,7 +385,7 @@ def setup_file():
 def clean_dir():
     print("Cleaning...")
 
-    if os.name == "nt":
+    if platform.system() == "Windows":
         time.sleep(5)
 
     os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
