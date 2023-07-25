@@ -83,12 +83,9 @@ def switch_to_ableton():
 # Get the solo-ed tracks locations
 def get_solo_tracks_locations():
     print("Looking for solo-ed tracks...")
-    if OS == "windows":
-        locations = pyautogui.locateAllOnScreen("screenshots/windows/solo.png")
-    else:
-        locations = pyautogui.locateAllOnScreen(
-            "screenshots/" + OS + "/solo.png", confidence=0.9
-        )
+    locations = pyautogui.locateAllOnScreen(
+        "screenshots/" + OS + "/solo.png", confidence=0.9
+    )
     if locations == None:
         pyautogui.alert("You need to solo the tracks you want to export.")
         exit()
@@ -135,12 +132,9 @@ def export(set, location, count):
     # Wait for the export to finish
     time.sleep(1)
     while True:
-        if OS == "windows":
-            location = pyautogui.locateOnScreen("screenshots/windows/export.png")
-        else:
-            location = pyautogui.locateOnScreen(
-                "screenshots/" + OS + "/export.png", confidence=0.9
-            )
+        location = pyautogui.locateOnScreen(
+            "screenshots/" + OS + "/export.png", confidence=0.9
+        )
         if location != None:
             print("Exporting...")
         else:
@@ -195,17 +189,17 @@ def main():
 
     locations = list(get_solo_tracks_locations())
     if len(locations) == 0:
-        print("You need to solo the tracks you want to export as stems.")
+        print("You need to solo the tracks or groups you want to export as stems.")
         say("Oops")
         exit()
 
     if len(locations) < 4:
-        print("You need to solo at least 4 tracks.")
+        print("You need to solo at least 4 tracks or groups.")
         say("Oops")
         exit()
 
     if len(locations) > 8:
-        print("You can't create stems with more than 8 tracks.")
+        print("You can't create stems with more than 8 tracks or groups.")
         say("Oops")
         exit()
 
