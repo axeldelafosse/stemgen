@@ -84,7 +84,7 @@ def switch_to_ableton():
 def get_solo_tracks_locations():
     print("Looking for solo-ed tracks...")
     locations = pyautogui.locateAllOnScreen(
-        "screenshots/" + OS + "/solo.png", confidence=0.9
+        "screenshots/" + OS + "/solo.png"
     )
     if locations == None:
         pyautogui.alert("You need to solo the tracks you want to export.")
@@ -133,7 +133,7 @@ def export(set, location, count):
     time.sleep(1)
     while True:
         location = pyautogui.locateOnScreen(
-            "screenshots/" + OS + "/export.png", confidence=0.9
+            "screenshots/" + OS + "/export.png"
         )
         if location != None:
             print("Exporting...")
