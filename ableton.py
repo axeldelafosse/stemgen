@@ -84,7 +84,7 @@ def switch_to_ableton():
 def get_solo_tracks_locations():
     print("Looking for solo-ed tracks...")
     locations = pyautogui.locateAllOnScreen(
-        "screenshots/" + OS + "/solo.png", confidence=0.95
+        "screenshots/" + OS + "/solo.png", confidence=0.95, grayscale=True
     )
     if locations == None:
         pyautogui.alert("You need to solo the tracks you want to export.")
@@ -233,9 +233,9 @@ def main():
 
     # Switch to Terminal
     if OS == "windows":
-        cmd = pyautogui.getWindowsWithTitle("Command Prompt")[0] or pyautogui.getWindowsWithTitle("Windows PowerShell")[0]
-        if cmd != None:
-            cmd.activate()
+        cmd = pyautogui.getWindowsWithTitle("Command Prompt") or pyautogui.getWindowsWithTitle("Windows PowerShell")
+        if cmd[0] != None:
+            cmd[0].activate()
     else:
         pyautogui.keyDown("command")
         pyautogui.press("tab")
