@@ -80,40 +80,16 @@ def switch_to_ableton():
     return
 
 
-# Get the solo-ed tracks locations
-def get_solo_tracks_locations():
-    print("Looking for solo-ed tracks...")
-    locations = pyautogui.locateAllOnScreen(
-        "screenshots/" + OS + "/solo.png", confidence=0.95, grayscale=True
-    )
-    if locations == None:
-        pyautogui.alert("You need to solo the tracks you want to export.")
-        exit()
-    return locations
-
-
 # Export a track based on a solo location
-def export(set, location, count):
+def export(track, position):
     # Solo the track (if not exporting master)
-    if count != 0:
-        if IS_RETINA == True:
-            x = (location[0] + (location[2] / 2)) / 2
-            y = (location[1] + (location[3] / 2)) / 2
-        else:
-            x = location[0] + location[2]
-            y = location[1] + location[3]
-        pyautogui.moveTo(x, y)
-        pyautogui.click()
+    if position != 0:
+        track.solo = True
 
         # Get the track name and color
-        name = ""
-        color = ""
-        for track in set.tracks:
-            if track.solo:
-                print(track.name)
-                name = track.name
-                color = ableton_color_index_to_hex[track.color_index]
-                break
+        print(track.name)
+        name = track.name
+        color = ableton_color_index_to_hex[track.color_index]
 
         STEMS.append({"color": color, "name": name})
 
@@ -124,10 +100,10 @@ def export(set, location, count):
         pyautogui.hotkey("command", "shift", "r")
     pyautogui.press("enter")
     time.sleep(1)
-    pyautogui.typewrite(NAME + "." + str(count) + ".aif")
+    pyautogui.typewrite(NAME + "." + str(position) + ".aif")
     pyautogui.press("enter")
 
-    print("Exporting: " + NAME + "." + str(count) + ".aif")
+    print("Exporting: " + NAME + "." + str(position) + ".aif")
 
     # Wait for the export to finish
     time.sleep(1)
@@ -138,13 +114,12 @@ def export(set, location, count):
         if location != None:
             print("Exporting...")
         else:
-            print("Exported: " + NAME + "." + str(count) + ".aif")
+            print("Exported: " + NAME + "." + str(position) + ".aif")
             break
 
     # Unsolo the track (if not exporting master)
-    if count != 0:
-        pyautogui.moveTo(x, y)
-        pyautogui.click()
+    if position != 0:
+        track.solo = False
     return
 
 
@@ -182,53 +157,46 @@ def main():
     # Get Ableton Live set
     set = live.Set()
     set.scan(scan_clip_names=True, scan_device=True)
-    # TODO: resize all tracks so they all fit on the screen
 
     switch_to_ableton()
     time.sleep(1)
 
-    locations = list(get_solo_tracks_locations())
-    if len(locations) == 0:
+    # Get the solo-ed tracks locations
+    soloed_tracks = []
+
+    for track in set.tracks:
+        if track.solo:
+            soloed_tracks.append(track)
+
+    if len(soloed_tracks) == 0:
         print("You need to solo the tracks or groups you want to export as stems.")
         say("Oops")
         exit()
 
-    if len(locations) < 4:
+    if len(soloed_tracks) < 4:
         print("You need to solo at least 4 tracks or groups.")
         say("Oops")
         exit()
 
-    if len(locations) > 8:
+    if len(soloed_tracks) > 8:
         print("You can't create stems with more than 8 tracks or groups.")
         say("Oops")
         exit()
 
-    print("Found " + str(len(locations)) + " solo-ed tracks.")
+    print("Found " + str(len(soloed_tracks)) + " solo-ed tracks.")
 
     # Unsolo the tracks
-    pyautogui.keyDown("command")
-    for location in locations:
-        if IS_RETINA == True:
-            x = (location[0] + (location[2] / 2)) / 2
-            y = (location[1] + (location[3] / 2)) / 2
-        else:
-            x = location[0] + location[2]
-            y = location[1] + location[3]
-        pyautogui.moveTo(x, y)
-        pyautogui.click()
-    pyautogui.keyUp("command")
-
     for track in set.tracks:
         if track.solo:
             track.solo = False
 
     # Export master
-    export(set, location, 0)
+    export(soloed_tracks, 0)
 
     # Export stems
     i = 1
-    for location in locations:
-        export(set, location, i)
+    for soloed_track in soloed_tracks:
+        export(soloed_track, i)
         i += 1
 
     # Switch to Terminal
@@ -242,7 +210,7 @@ def main():
         pyautogui.keyUp("command")
 
     # Create metadata.part1.json and metadata.part2.json if double stems
-    if len(locations) == 8:
+    if len(soloed_tracks) == 8:
         create_metadata_json(STEMS[:4], "metadata.part1.json")
         create_metadata_json(STEMS[4:], "metadata.part2.json")
 
