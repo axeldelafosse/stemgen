@@ -233,7 +233,7 @@ def main():
 
     # Switch to Terminal
     if OS == "windows":
-        cmd = pyautogui.getWindowsWithTitle("Command Prompt")[0]
+        cmd = pyautogui.getWindowsWithTitle("Command Prompt")[0] or pyautogui.getWindowsWithTitle("Windows PowerShell")[0]
         if cmd != None:
             cmd.activate()
     else:
