@@ -30,8 +30,13 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+print("Loading collection.nml...")
+
 collection = TraktorCollection(path=Path(args.collection))
 
+print("Loaded!")
+
+print("Matching...")
 for part1 in collection.nml.collection.entry:
     # Check if part 1 of stem file
     if (
@@ -86,5 +91,7 @@ for part1 in collection.nml.collection.entry:
 
         print("\n")
 
+print("Done.")
+print("Saving...")
 collection.save()
 print("Done.")
