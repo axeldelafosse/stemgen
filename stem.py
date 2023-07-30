@@ -183,7 +183,6 @@ def setup():
     else:
         print("Output dir already exists.")
 
-    global BASE_PATH, FILE_EXTENSION
     BASE_PATH = os.path.basename(INPUT_PATH)
     FILE_EXTENSION = os.path.splitext(BASE_PATH)[1]
 
@@ -191,7 +190,7 @@ def setup():
         print("Invalid input file format. File should be one of:", SUPPORTED_FILES)
         sys.exit(1)
 
-    setup_file()
+    setup_file(BASE_PATH, FILE_EXTENSION, INPUT_PATH)
     get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME)
     get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME)
 
@@ -214,8 +213,7 @@ def strip_accents(text):
     return str(text)
 
 
-def setup_file():
-    global FILE_NAME, INPUT_FOLDER, FILE_PATH
+def setup_file(BASE_PATH, FILE_EXTENSION, INPUT_PATH):
     FILE_NAME = BASE_PATH.removesuffix(FILE_EXTENSION).removesuffix(".0")
     INPUT_FOLDER = os.path.dirname(INPUT_PATH)
 
