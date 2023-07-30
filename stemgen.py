@@ -53,10 +53,8 @@ PYTHON_EXEC = sys.executable if not None else "python3"
 # CONVERSION AND GENERATION
 
 
-def convert():
+def convert(BIT_DEPTH, SAMPLE_RATE):
     print("Converting to wav and/or downsampling...")
-
-    # We downsample to 44.1kHz to avoid problems with the separation software
     # because the models are trained on 44.1kHz audio files
 
     # QUALITY            WIDTH  REJ dB   TYPICAL USE
@@ -66,8 +64,8 @@ def convert():
     # -s           Steep filter (band-width = 99%)
     # -a           Allow aliasing above the pass-band
 
-    global BIT_DEPTH
-    global SAMPLE_RATE
+    BIT_DEPTH = None
+    SAMPLE_RATE = None
 
     converted_file_path = os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME + ".wav")
 
@@ -274,7 +272,7 @@ def setup():
     get_sample_rate()
     get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME)
     get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME)
-    convert()
+    convert(BIT_DEPTH, SAMPLE_RATE)
 
     print("Ready!")
 
