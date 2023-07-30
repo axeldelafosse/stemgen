@@ -32,11 +32,11 @@ import logging
 from metadata import create_metadata_json, ableton_color_index_to_hex
 
 # Settings
-NAME = "track"
-IS_RETINA = False
-OS = "windows" if platform.system() == "Windows" else "macos"
-PYTHON_EXEC = sys.executable if not None else "python3"
-STEMS = []
+NAME = "track"  # The name of the track to be exported
+IS_RETINA = False  # A flag indicating whether the display is Retina Display
+OS = "windows" if platform.system() == "Windows" else "macos"  # The operating system
+PYTHON_EXEC = sys.executable if not None else "python3"  # The Python executable
+STEMS = []  # A list of stems to be exported
 
 # https://github.com/asweigart/pyautogui/issues/790
 if OS == "macos":
@@ -48,6 +48,11 @@ if OS == "macos":
 
 
 def say(text):
+    """
+    This function uses the system's text-to-speech functionality to say a given text.
+    :param text: The text to be spoken.
+    :return: None
+    """
     if OS == "windows":
         os.system("wsay " + text)
     else:
@@ -56,6 +61,10 @@ def say(text):
 
 # Switch to Ableton Live
 def switch_to_ableton():
+    """
+    This function switches the active window to Ableton Live.
+    :return: None
+    """
     print("Looking for Ableton Live...")
     if OS == "windows":
         ableton = pyautogui.getWindowsWithTitle("Ableton Live")[0]
@@ -82,6 +91,12 @@ def switch_to_ableton():
 
 # Export a track based on a solo location
 def export(track, position):
+    """
+    This function exports a track based on a solo location.
+    :param track: The track to be exported.
+    :param position: The position of the track.
+    :return: None
+    """
     # Solo the track (if not exporting master)
     if position != 0:
         track.solo = True
@@ -124,6 +139,10 @@ def export(track, position):
 
 
 def main():
+    """
+    This is the main function of the script. It sets up logging, prompts the user for the file name, checks for Retina Display, gets the Ableton Live set, switches to Ableton Live, gets the solo-ed tracks locations, exports the tracks, switches to Terminal, creates metadata files, and creates the stem file(s).
+    :return: None
+    """
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s.%(msecs)03d: %(message)s",
