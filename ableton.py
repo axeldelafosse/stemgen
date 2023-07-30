@@ -47,7 +47,7 @@ if OS == "macos":
     pyscreeze.PIL__version__ = __PIL_TUPLE_VERSION
 
 
-def say(text):
+def say(text, OS):
     if OS == "windows":
         os.system("wsay " + text)
     else:
@@ -132,8 +132,8 @@ def main():
     print("Welcome to Stemgen for Ableton Live!")
 
     # Get file name
-    global NAME
-    NAME = pyautogui.prompt(
+    NAME = "track"
+    IS_RETINA = False
         text="Enter the name of the file", title="Stemgen for Ableton Live", default=""
     )
 
@@ -233,7 +233,7 @@ def main():
         ])
 
     print("Done! Enjoy :)")
-    say("Done")
+    say("Done", OS)
     return
 
 
