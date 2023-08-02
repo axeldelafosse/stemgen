@@ -39,6 +39,7 @@ And trust me: it's even better in real life. Can't wait to see him again!
 - demucs v4 https://github.com/facebookresearch/demucs
 - ffmpeg https://www.ffmpeg.org
 - sox https://sox.sourceforge.net
+- mutagen https://mutagen.readthedocs.io
 
 ## Usage
 
@@ -71,16 +72,19 @@ You can use Ableton Live to create stems:
 ## Quick install on macOS
 
 - `python3 -m pip install -U demucs`
+- `python3 -m pip install mutagen`
 - `brew install coreutils ffmpeg sox`
 
 ## Quick install on Linux
 
 - `python3 -m pip install -U demucs`
+- `python3 -m pip install mutagen`
 - `sudo apt install ffmpeg sox gpac` (or install ffmpeg with https://github.com/markus-perl/ffmpeg-build-script if you plan to encode in AAC)
 
 ## Long install on Windows
 
 - `python3 -m pip install -U demucs`
+- `python3 -m pip install mutagen`
 - You might need Microsoft C++ Build Tools https://visualstudio.microsoft.com/visual-cpp-build-tools
   for Demucs
 - Download ffmpeg from https://www.ffmpeg.org/download.html
