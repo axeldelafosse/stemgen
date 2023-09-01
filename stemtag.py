@@ -77,7 +77,10 @@ for stem in collection.nml.collection.entry:
 
                 # Write the integrated LUFS to "Comment" (info.comment)
                 try:
-                    if not regular.info.comment.startswith("LUFS:"):
+                    if (
+                        regular.info.comment is None
+                        or not regular.info.comment.startswith("LUFS:")
+                    ):
                         # TODO: Windows support
                         data, rate = sf.read(
                             "/Volumes/"
