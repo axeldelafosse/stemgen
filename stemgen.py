@@ -35,18 +35,24 @@ parser = argparse.ArgumentParser(
     description=USAGE, formatter_class=argparse.RawTextHelpFormatter
 )
 parser.add_argument(
-    "-i", dest="INPUT_PATH", required=True, help="the path to the input file"
+    "-i", "--input", dest="INPUT_PATH", required=True, help="the path to the input file"
 )
 parser.add_argument(
-    "-o", dest="OUTPUT_PATH", default="output", help="the path to the output folder"
+    "-o",
+    "--output",
+    dest="OUTPUT_PATH",
+    default="output",
+    help="the path to the output folder",
 )
-parser.add_argument("-f", dest="FORMAT", default="alac", help="aac or alac")
+parser.add_argument("-f", "--format", dest="FORMAT", default="alac", help="aac or alac")
+parser.add_argument("-d", "--device", dest="DEVICE", default="cpu", help="cpu or cuda")
 parser.add_argument("-v", "--version", action="version", version=VERSION)
 args = parser.parse_args()
 
 INPUT_PATH = args.INPUT_PATH
 OUTPUT_PATH = args.OUTPUT_PATH
 FORMAT = args.FORMAT
+DEVICE = args.DEVICE
 DIR = Path(__file__).parent.absolute()
 PYTHON_EXEC = sys.executable if not None else "python3"
 
@@ -180,7 +186,7 @@ def split_stems():
                 "-n",
                 "htdemucs",
                 "-d",
-                "cpu",
+                DEVICE,
                 FILE_PATH,
                 "-o",
                 f"{OUTPUT_PATH}/{FILE_NAME}",
@@ -196,7 +202,7 @@ def split_stems():
                 "-n",
                 "htdemucs",
                 "-d",
-                "cpu",
+                DEVICE,
                 FILE_PATH,
                 "-o",
                 f"{OUTPUT_PATH}/{FILE_NAME}",
