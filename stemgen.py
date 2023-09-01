@@ -35,7 +35,10 @@ parser = argparse.ArgumentParser(
     description=USAGE, formatter_class=argparse.RawTextHelpFormatter
 )
 parser.add_argument(
-    "-i", "--input", dest="INPUT_PATH", required=True, help="the path to the input file"
+    dest="POSITIONAL_INPUT_PATH", nargs="?", help="the path to the input file"
+)
+parser.add_argument(
+    "-i", "--input", dest="INPUT_PATH", help="the path to the input file"
 )
 parser.add_argument(
     "-o",
@@ -49,7 +52,7 @@ parser.add_argument("-d", "--device", dest="DEVICE", default="cpu", help="cpu or
 parser.add_argument("-v", "--version", action="version", version=VERSION)
 args = parser.parse_args()
 
-INPUT_PATH = args.INPUT_PATH
+INPUT_PATH = args.POSITIONAL_INPUT_PATH or args.INPUT_PATH
 OUTPUT_PATH = args.OUTPUT_PATH
 FORMAT = args.FORMAT
 DEVICE = args.DEVICE
