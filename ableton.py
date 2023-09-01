@@ -3,11 +3,11 @@
 # Stemgen for Ableton Live
 
 # Installation:
-# `pip install opencv-python`
-# Only on macOS: `pip install pyobjc-core`
-# Only on macOS: `pip install pyobjc`
-# `pip install pyautogui`
-# `pip install pylive`
+# `python3 -m pip install opencv-python`
+# Only on macOS: `python3 -m pip install pyobjc-core`
+# Only on macOS: `python3 -m pip install pyobjc`
+# `python3 -m pip install pyautogui`
+# `python3 -m pip install pylive`
 # Also install https://github.com/ideoforms/AbletonOSC as a Remote Script
 # Only on Windows: you can install https://github.com/p-groarke/wsay/releases to get audio feedback
 
@@ -53,6 +53,7 @@ def say(text):
     else:
         os.system("say " + text)
     return
+
 
 # Switch to Ableton Live
 def switch_to_ableton():
@@ -151,7 +152,7 @@ def main():
             IS_RETINA = True
         else:
             IS_RETINA = False
-        
+
         print("Retina Display: " + str(IS_RETINA))
 
     # Get Ableton Live set
@@ -161,7 +162,7 @@ def main():
     switch_to_ableton()
     time.sleep(1)
 
-    # Get the solo-ed tracks locations
+    # Get the solo-ed tracks
     soloed_tracks = []
 
     for track in set.tracks:
@@ -193,6 +194,12 @@ def main():
     # Export master
     export(soloed_tracks, 0)
 
+    # Check if master was exported in `stemgen/input` folder
+    if not os.path.exists("input/" + NAME + ".0.aif"):
+        print("You need to set `stemgen/input` as the output folder.")
+        say("Oops")
+        exit()
+
     # Export stems
     i = 1
     for soloed_track in soloed_tracks:
@@ -201,7 +208,9 @@ def main():
 
     # Switch to Terminal
     if OS == "windows":
-        cmd = pyautogui.getWindowsWithTitle("Command Prompt") or pyautogui.getWindowsWithTitle("Windows PowerShell")
+        cmd = pyautogui.getWindowsWithTitle(
+            "Command Prompt"
+        ) or pyautogui.getWindowsWithTitle("Windows PowerShell")
         if cmd[0] != None:
             cmd[0].activate()
     else:
@@ -216,21 +225,18 @@ def main():
 
     # Create the stem file(s)
     if OS == "windows":
-        subprocess.run([
-            PYTHON_EXEC,
-            "stem.py",
-            "-i",
-            "input/" + NAME + ".0.aif",
-            "-f",
-            "aac",
-        ])
+        subprocess.run(
+            [
+                PYTHON_EXEC,
+                "stem.py",
+                "-i",
+                "input/" + NAME + ".0.aif",
+                "-f",
+                "aac",
+            ]
+        )
     else:
-        subprocess.run([
-            PYTHON_EXEC,
-            "stem.py",
-            "-i",
-            "input/" + NAME + ".0.aif"
-        ])
+        subprocess.run([PYTHON_EXEC, "stem.py", "-i", "input/" + NAME + ".0.aif"])
 
     print("Done! Enjoy :)")
     say("Done")

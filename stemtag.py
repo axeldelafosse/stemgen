@@ -4,9 +4,9 @@
 # and copy over the metadata from the stem file to the master file
 
 # Installation:
-# `pip install git+https://github.com/wolkenarchitekt/traktor-nml-utils`
-# `pip install soundfile`
-# `pip install pyloudnorm`
+# `python3 -m pip install git+https://github.com/wolkenarchitekt/traktor-nml-utils`
+# `python3 -m pip install soundfile`
+# `python3 -m pip install pyloudnorm`
 
 import argparse
 from traktor_nml_utils import TraktorCollection

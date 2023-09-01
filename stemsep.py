@@ -3,7 +3,8 @@
 # Stemsep lets you split a stem file into multiple files
 
 # Installation:
-# `pip install ffmpeg-python`
+# `python3 -m pip install ffmpeg-python`
+# `python3 -m pip install mutagen`
 
 # Usage:
 # `python3 stemsep.py track.stem.m4a`

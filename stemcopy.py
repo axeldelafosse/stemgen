@@ -4,7 +4,7 @@
 # the metadata from the first part to the second part
 
 # Install `trakor-nml-utils`:
-# `pip install git+https://github.com/wolkenarchitekt/traktor-nml-utils`
+# `python3 -m pip install git+https://github.com/wolkenarchitekt/traktor-nml-utils`
 
 # They need to follow this naming convention:
 # "Artist - Title (Version) [part 1].stem.m4a"

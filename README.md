@@ -45,7 +45,7 @@ And trust me: it's even better in real life. Can't wait to see him again!
 
 You can use `stemgen.py` to generate stems:
 
-- `$ python3 stemgen.py -i track.wav`
+- `$ python3 stemgen.py track.wav`
 - Have fun! Your new `.stem.m4a` file is in `output` dir
 - Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
 
