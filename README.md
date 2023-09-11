@@ -49,6 +49,14 @@ You can use `stemgen.py` to generate stems:
 - Have fun! Your new `.stem.m4a` file is in `output` dir
 - Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
 
+## Running Stemgen with Docker
+
+To avoid having to install dependencies manually, you can run stemgen with docker:
+
+```sh
+scripts/run_stemgen_with_docker.sh /path/to/track.wav`
+```
+
 ## Bring your own stems
 
 ### Manually
