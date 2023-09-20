@@ -22,76 +22,83 @@ import argparse
 from traktor_nml_utils import TraktorCollection
 from pathlib import Path
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "collection",
-    help="Path to Traktor `collection.nml` file",
-    default="collection.nml",
-)
-args = parser.parse_args()
 
-print("Loading collection.nml...")
+def main():
+    parser = argparse.ArgumentParser()
 
-collection = TraktorCollection(path=Path(args.collection))
+    parser.add_argument(
+        "collection",
+        help="Path to Traktor `collection.nml` file",
+        default="collection.nml",
+    )
+    args = parser.parse_args()
 
-print("Loaded!")
+    print("Loading collection.nml...")
 
-print("Matching...")
-for part1 in collection.nml.collection.entry:
-    # Check if part 1 of stem file
-    if (
-        part1.stems
-        and part1.lock != 1
-        and (
-            part1.location.file.endswith("[part 1].stem.m4a")
-            or part1.location.file.endswith("[part 1].stem.mp4")
-        )
-    ):
-        print(part1.location.file)
+    collection = TraktorCollection(path=Path(args.collection))
 
-        # Match part 1 with part 2
-        for part2 in collection.nml.collection.entry:
-            if (
-                part2.stems
-                and (
-                    part2.location.file.endswith("[part 2].stem.m4a")
-                    or part2.location.file.endswith("[part 2].stem.mp4")
-                )
-                and (
-                    part1.location.file.removesuffix("[part 1].stem.m4a")
-                    == part2.location.file.removesuffix("[part 2].stem.m4a")
-                    or part1.location.file.removesuffix("[part 1].stem.mp4")
-                    == part2.location.file.removesuffix("[part 2].stem.mp4")
-                )
-            ):
-                print(part2.location.file)
+    print("Loaded!")
 
-                if part1.cue_v2:
-                    part2.cue_v2 = part1.cue_v2
-                if part1.tempo:
-                    part2.tempo = part1.tempo
-                if part1.musical_key:
-                    part2.musical_key = part1.musical_key
-                if part1.info.genre:
-                    part2.info.genre = part1.info.genre
-                if part1.info.label:
-                    part2.info.label = part1.info.label
-                if part1.info.playcount:
-                    part2.info.playcount = part1.info.playcount
-                if part1.info.last_played:
-                    part2.info.last_played = part1.info.last_played
-                if part1.info.color:
-                    part2.info.color = part1.info.color
+    print("Matching...")
+    for part1 in collection.nml.collection.entry:
+        # Check if part 1 of stem file
+        if (
+            part1.stems
+            and part1.lock != 1
+            and (
+                part1.location.file.endswith("[part 1].stem.m4a")
+                or part1.location.file.endswith("[part 1].stem.mp4")
+            )
+        ):
+            print(part1.location.file)
 
-                part1.lock = 1
-                part2.lock = 1
+            # Match part 1 with part 2
+            for part2 in collection.nml.collection.entry:
+                if (
+                    part2.stems
+                    and (
+                        part2.location.file.endswith("[part 2].stem.m4a")
+                        or part2.location.file.endswith("[part 2].stem.mp4")
+                    )
+                    and (
+                        part1.location.file.removesuffix("[part 1].stem.m4a")
+                        == part2.location.file.removesuffix("[part 2].stem.m4a")
+                        or part1.location.file.removesuffix("[part 1].stem.mp4")
+                        == part2.location.file.removesuffix("[part 2].stem.mp4")
+                    )
+                ):
+                    print(part2.location.file)
 
-                print("OK")
-                break
+                    if part1.cue_v2:
+                        part2.cue_v2 = part1.cue_v2
+                    if part1.tempo:
+                        part2.tempo = part1.tempo
+                    if part1.musical_key:
+                        part2.musical_key = part1.musical_key
+                    if part1.info.genre:
+                        part2.info.genre = part1.info.genre
+                    if part1.info.label:
+                        part2.info.label = part1.info.label
+                    if part1.info.playcount:
+                        part2.info.playcount = part1.info.playcount
+                    if part1.info.last_played:
+                        part2.info.last_played = part1.info.last_played
+                    if part1.info.color:
+                        part2.info.color = part1.info.color
 
-        print("\n")
+                    part1.lock = 1
+                    part2.lock = 1
 
-print("Done.")
-print("Saving...")
-collection.save()
-print("Done.")
+                    print("OK")
+                    break
+
+            print("\n")
+
+    print("Done.")
+    print("Saving...")
+    collection.save()
+    print("Done.")
+
+
+if __name__ == "__main__":
+    main()

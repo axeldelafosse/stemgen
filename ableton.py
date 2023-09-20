@@ -22,6 +22,7 @@
 # Enjoy your stems!
 
 import os
+from pathlib import Path
 import platform
 import sys
 import subprocess
@@ -36,6 +37,7 @@ NAME = "track"
 IS_RETINA = False
 OS = "windows" if platform.system() == "Windows" else "macos"
 PYTHON_EXEC = sys.executable if not None else "python3"
+INSTALL_DIR = Path(__file__).parent.absolute()
 STEMS = []
 
 # https://github.com/asweigart/pyautogui/issues/790
@@ -70,7 +72,7 @@ def switch_to_ableton():
     pyautogui.press("tab")
     time.sleep(1)
     x, y = pyautogui.locateCenterOnScreen(
-        "screenshots/" + OS + "/logo.png", confidence=0.9
+        os.path.join(INSTALL_DIR, "screenshots", OS, "logo.png"), confidence=0.9
     )
     print("Found it!")
     if IS_RETINA == True:
@@ -110,7 +112,7 @@ def export(track, position):
     time.sleep(1)
     while True:
         location = pyautogui.locateOnScreen(
-            "screenshots/" + OS + "/export.png", confidence=0.9
+            os.path.join(INSTALL_DIR, "screenshots", OS, "export.png"), confidence=0.9
         )
         if location != None:
             print("Exporting...")
@@ -195,7 +197,7 @@ def main():
     export(soloed_tracks, 0)
 
     # Check if master was exported in `stemgen/input` folder
-    if not os.path.exists("input/" + NAME + ".0.aif"):
+    if not os.path.exists(os.path.join(INSTALL_DIR, "input", NAME + ".0.aif")):
         print("You need to set `stemgen/input` as the output folder.")
         say("Oops")
         exit()
@@ -228,19 +230,28 @@ def main():
         subprocess.run(
             [
                 PYTHON_EXEC,
-                "stem.py",
+                os.path.join(INSTALL_DIR, "stem.py"),
                 "-i",
-                "input/" + NAME + ".0.aif",
+                os.path.join(INSTALL_DIR, "input", NAME + ".0.aif"),
                 "-f",
                 "aac",
             ]
         )
     else:
-        subprocess.run([PYTHON_EXEC, "stem.py", "-i", "input/" + NAME + ".0.aif"])
+        subprocess.run(
+            [
+                PYTHON_EXEC,
+                os.path.join(INSTALL_DIR, "stem.py"),
+                "-i",
+                os.path.join(INSTALL_DIR, "input", NAME + ".0.aif"),
+            ]
+        )
 
     print("Done! Enjoy :)")
     say("Done")
     return
 
 
-main()
+if __name__ == "__main__":
+    os.chdir(INSTALL_DIR)
+    main()

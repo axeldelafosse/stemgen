@@ -29,7 +29,7 @@ Usage: python3 stemgen.py -i [INPUT_PATH] -o [OUTPUT_PATH]
 
 Supported input file format: {SUPPORTED_FILES}
 """
-VERSION = "5.0.0"
+VERSION = "6.0.0"
 
 parser = argparse.ArgumentParser(
     description=USAGE, formatter_class=argparse.RawTextHelpFormatter
@@ -52,11 +52,16 @@ parser.add_argument("-d", "--device", dest="DEVICE", default="cpu", help="cpu or
 parser.add_argument("-v", "--version", action="version", version=VERSION)
 args = parser.parse_args()
 
+INSTALL_DIR = Path(__file__).parent.absolute()
+PROCESS_DIR = os.getcwd()
 INPUT_PATH = args.POSITIONAL_INPUT_PATH or args.INPUT_PATH
-OUTPUT_PATH = args.OUTPUT_PATH
+OUTPUT_PATH = (
+    args.OUTPUT_PATH
+    if os.path.isabs(args.OUTPUT_PATH)
+    else os.path.join(PROCESS_DIR, args.OUTPUT_PATH)
+)
 FORMAT = args.FORMAT
 DEVICE = args.DEVICE
-DIR = Path(__file__).parent.absolute()
 PYTHON_EXEC = sys.executable if not None else "python3"
 
 # CONVERSION AND GENERATION
@@ -217,7 +222,7 @@ def split_stems():
 
 def create_stem():
     print("Creating stem...")
-    cd_root()
+    os.chdir(INSTALL_DIR)
 
     stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
     stem_args += [
@@ -245,15 +250,15 @@ def create_stem():
 # SETUP
 
 
-def cd_root():
-    os.chdir(DIR)
-
-
 def setup():
     for package in REQUIRED_PACKAGES:
         if not shutil.which(package):
             print(f"Please install {package} before running Stemgen.")
             sys.exit(2)
+
+    if not os.path.exists(os.path.join(INSTALL_DIR, "ni-stem/ni-stem")):
+        print("Please install ni-stem before running Stem.")
+        sys.exit(2)
 
     if (
         subprocess.run(
@@ -282,7 +287,7 @@ def setup():
     get_bit_depth()
     get_sample_rate()
     get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME)
-    get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME)
+    get_metadata(FILE_PATH, OUTPUT_PATH, FILE_NAME)
     convert()
 
     print("Ready!")
@@ -376,9 +381,9 @@ def strip_accents(text):
 
 
 def setup_file():
-    global FILE_NAME, INPUT_FOLDER, FILE_PATH
+    global FILE_NAME, INPUT_DIR, FILE_PATH
     FILE_NAME = strip_accents(BASE_PATH.removesuffix(FILE_EXTENSION))
-    INPUT_FOLDER = os.path.dirname(INPUT_PATH)
+    INPUT_DIR = os.path.join(PROCESS_DIR, os.path.dirname(INPUT_PATH))
 
     if os.path.exists(f"{OUTPUT_PATH}/{FILE_NAME}"):
         print("Working dir already exists.")
@@ -400,15 +405,19 @@ def clean_dir():
     os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
     if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
         os.rename(f"{FILE_NAME}.stem.m4a", os.path.join("..", f"{FILE_NAME}.stem.m4a"))
-    shutil.rmtree(os.path.join(DIR, OUTPUT_PATH + "/" + FILE_NAME))
-    input_dir = os.path.join(DIR, INPUT_FOLDER)
-    for file in os.listdir(input_dir):
+    shutil.rmtree(os.path.join(OUTPUT_PATH + "/" + FILE_NAME))
+    for file in os.listdir(INPUT_DIR):
         if file.endswith(".m4a"):
-            os.remove(os.path.join(input_dir, file))
+            os.remove(os.path.join(INPUT_DIR, file))
 
     print("Done.")
 
 
-cd_root()
-setup()
-run()
+def main():
+    setup()
+    run()
+
+
+if __name__ == "__main__":
+    os.chdir(PROCESS_DIR)
+    main()

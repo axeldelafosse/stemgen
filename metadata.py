@@ -45,7 +45,7 @@ def get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME):
     print("Done.")
 
 
-def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
+def get_metadata(FILE_PATH, OUTPUT_PATH, FILE_NAME):
     print("Extracting metadata...")
 
     # Extract metadata with mutagen
@@ -273,7 +273,7 @@ def get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME):
 
     # `cover`
     if os.path.exists(os.path.join(OUTPUT_PATH, FILE_NAME, "cover.jpg")):
-        TAGS["cover"] = f"{os.path.join(DIR, OUTPUT_PATH, FILE_NAME, 'cover.jpg')}"
+        TAGS["cover"] = f"{os.path.join(OUTPUT_PATH, FILE_NAME, 'cover.jpg')}"
 
     print(TAGS)
 

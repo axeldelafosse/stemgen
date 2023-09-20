@@ -40,25 +40,41 @@ Example: 'track.0.wav' for the master file then 'track.1.wav' for the first stem
 
 You can also use ableton.py to automatically create the stems from Ableton Live.
 """
-VERSION = "1.0.0"
+VERSION = "2.0.0"
 
 parser = argparse.ArgumentParser(
     description=USAGE, formatter_class=argparse.RawTextHelpFormatter
 )
 parser.add_argument(
-    "-i", dest="INPUT_PATH", required=True, help="the path to the input file"
+    dest="POSITIONAL_INPUT_PATH", nargs="?", help="the path to the input file"
 )
 parser.add_argument(
-    "-o", dest="OUTPUT_PATH", default="output", help="the path to the output folder"
+    "-i", "--input", dest="INPUT_PATH", help="the path to the input file"
 )
-parser.add_argument("-f", dest="FORMAT", default="alac", help="aac or alac")
+parser.add_argument(
+    "-o",
+    "--output",
+    dest="OUTPUT_PATH",
+    default="output",
+    help="the path to the output folder",
+)
+parser.add_argument("-f", "--format", dest="FORMAT", default="alac", help="aac or alac")
 parser.add_argument("-v", "--version", action="version", version=VERSION)
 args = parser.parse_args()
 
-INPUT_PATH = args.INPUT_PATH
-OUTPUT_PATH = args.OUTPUT_PATH
+INSTALL_DIR = Path(__file__).parent.absolute()
+PROCESS_DIR = os.getcwd()
+INPUT_PATH = (
+    args.POSITIONAL_INPUT_PATH or args.INPUT_PATH
+    if os.path.isabs(args.POSITIONAL_INPUT_PATH or args.INPUT_PATH)
+    else os.path.join(PROCESS_DIR, args.POSITIONAL_INPUT_PATH or args.INPUT_PATH)
+)
+OUTPUT_PATH = (
+    args.OUTPUT_PATH
+    if os.path.isabs(args.OUTPUT_PATH)
+    else os.path.join(PROCESS_DIR, args.OUTPUT_PATH)
+)
 FORMAT = args.FORMAT
-DIR = Path(__file__).parent.absolute()
 PYTHON_EXEC = sys.executable if not None else "python3"
 
 # CREATION
@@ -66,12 +82,12 @@ PYTHON_EXEC = sys.executable if not None else "python3"
 
 def create_stem():
     print("Creating stem...")
-    cd_root()
+    os.chdir(INSTALL_DIR)
 
     is_double_stem = False
 
     # Create another stem if we have more than 4 stems in the folder
-    if os.path.exists(f"{INPUT_FOLDER}/{FILE_NAME}.5{FILE_EXTENSION}"):
+    if os.path.exists(f"{INPUT_DIR}/{FILE_NAME}.5{FILE_EXTENSION}"):
         is_double_stem = True
 
     if is_double_stem:
@@ -85,10 +101,10 @@ def create_stem():
 
         stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
         stem_args += [
-            f"{INPUT_FOLDER}/{FILE_NAME}.1{FILE_EXTENSION}",
-            f"{INPUT_FOLDER}/{FILE_NAME}.2{FILE_EXTENSION}",
-            f"{INPUT_FOLDER}/{FILE_NAME}.3{FILE_EXTENSION}",
-            f"{INPUT_FOLDER}/{FILE_NAME}.4{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.1{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.2{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.3{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.4{FILE_EXTENSION}",
         ]
         stem_args += [
             "-x",
@@ -115,10 +131,10 @@ def create_stem():
 
         stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
         stem_args += [
-            f"{INPUT_FOLDER}/{FILE_NAME}.5{FILE_EXTENSION}",
-            f"{INPUT_FOLDER}/{FILE_NAME}.6{FILE_EXTENSION}",
-            f"{INPUT_FOLDER}/{FILE_NAME}.7{FILE_EXTENSION}",
-            f"{INPUT_FOLDER}/{FILE_NAME}.8{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.5{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.6{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.7{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.8{FILE_EXTENSION}",
         ]
         stem_args += [
             "-x",
@@ -137,10 +153,10 @@ def create_stem():
     else:
         stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
         stem_args += [
-            f"{INPUT_FOLDER}/{FILE_NAME}.1{FILE_EXTENSION}",
-            f"{INPUT_FOLDER}/{FILE_NAME}.2{FILE_EXTENSION}",
-            f"{INPUT_FOLDER}/{FILE_NAME}.3{FILE_EXTENSION}",
-            f"{INPUT_FOLDER}/{FILE_NAME}.4{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.1{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.2{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.3{FILE_EXTENSION}",
+            f"{INPUT_DIR}/{FILE_NAME}.4{FILE_EXTENSION}",
         ]
         stem_args += [
             "-x",
@@ -163,17 +179,13 @@ def create_stem():
 # SETUP
 
 
-def cd_root():
-    os.chdir(DIR)
-
-
 def setup():
     for package in REQUIRED_PACKAGES:
         if not shutil.which(package):
             print(f"Please install {package} before running Stem.")
             sys.exit(2)
 
-    if not os.path.exists("ni-stem/ni-stem"):
+    if not os.path.exists(os.path.join(INSTALL_DIR, "ni-stem/ni-stem")):
         print("Please install ni-stem before running Stem.")
         sys.exit(2)
 
@@ -193,7 +205,7 @@ def setup():
 
     setup_file()
     get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME)
-    get_metadata(DIR, FILE_PATH, OUTPUT_PATH, FILE_NAME)
+    get_metadata(FILE_PATH, OUTPUT_PATH, FILE_NAME)
 
     print("Ready!")
 
@@ -215,9 +227,9 @@ def strip_accents(text):
 
 
 def setup_file():
-    global FILE_NAME, INPUT_FOLDER, FILE_PATH
+    global FILE_NAME, INPUT_DIR, FILE_PATH
     FILE_NAME = BASE_PATH.removesuffix(FILE_EXTENSION).removesuffix(".0")
-    INPUT_FOLDER = os.path.dirname(INPUT_PATH)
+    INPUT_DIR = os.path.join(PROCESS_DIR, os.path.dirname(INPUT_PATH))
 
     if os.path.exists(f"{OUTPUT_PATH}/{FILE_NAME}"):
         print("Working dir already exists.")
@@ -249,15 +261,19 @@ def clean_dir():
                 f"{FILE_NAME} [part 2].stem.m4a",
                 os.path.join("..", f"{FILE_NAME} [part 2].stem.m4a"),
             )
-    shutil.rmtree(os.path.join(DIR, OUTPUT_PATH + "/" + FILE_NAME))
-    input_dir = os.path.join(DIR, INPUT_FOLDER)
-    for file in os.listdir(input_dir):
+    shutil.rmtree(os.path.join(OUTPUT_PATH + "/" + FILE_NAME))
+    for file in os.listdir(INPUT_DIR):
         if file.endswith(".m4a"):
-            os.remove(os.path.join(input_dir, file))
+            os.remove(os.path.join(INPUT_DIR, file))
 
     print("Done.")
 
 
-cd_root()
-setup()
-run()
+def main():
+    setup()
+    run()
+
+
+if __name__ == "__main__":
+    os.chdir(PROCESS_DIR)
+    main()
