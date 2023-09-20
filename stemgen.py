@@ -31,6 +31,9 @@ Supported input file format: {SUPPORTED_FILES}
 """
 VERSION = "6.0.0"
 
+INSTALL_DIR = Path(__file__).parent.absolute()
+PROCESS_DIR = os.getcwd()
+
 parser = argparse.ArgumentParser(
     description=USAGE, formatter_class=argparse.RawTextHelpFormatter
 )
@@ -44,7 +47,7 @@ parser.add_argument(
     "-o",
     "--output",
     dest="OUTPUT_PATH",
-    default="output",
+    default="output" if INSTALL_DIR.as_posix() == PROCESS_DIR else ".",
     help="the path to the output folder",
 )
 parser.add_argument("-f", "--format", dest="FORMAT", default="alac", help="aac or alac")
@@ -52,8 +55,6 @@ parser.add_argument("-d", "--device", dest="DEVICE", default="cpu", help="cpu or
 parser.add_argument("-v", "--version", action="version", version=VERSION)
 args = parser.parse_args()
 
-INSTALL_DIR = Path(__file__).parent.absolute()
-PROCESS_DIR = os.getcwd()
 INPUT_PATH = args.POSITIONAL_INPUT_PATH or args.INPUT_PATH
 OUTPUT_PATH = (
     args.OUTPUT_PATH
@@ -403,12 +404,14 @@ def clean_dir():
         time.sleep(5)
 
     os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
-    if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
-        os.rename(f"{FILE_NAME}.stem.m4a", os.path.join("..", f"{FILE_NAME}.stem.m4a"))
-    shutil.rmtree(os.path.join(OUTPUT_PATH + "/" + FILE_NAME))
+
     for file in os.listdir(INPUT_DIR):
         if file.endswith(".m4a"):
             os.remove(os.path.join(INPUT_DIR, file))
+
+    if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
+        os.rename(f"{FILE_NAME}.stem.m4a", os.path.join("..", f"{FILE_NAME}.stem.m4a"))
+    shutil.rmtree(os.path.join(OUTPUT_PATH + "/" + FILE_NAME))
 
     print("Done.")
 
