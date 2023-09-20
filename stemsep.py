@@ -10,6 +10,7 @@
 # `python3 stemsep.py track.stem.m4a`
 
 import argparse
+import subprocess
 
 from stempeg.read import Info, read_stems
 from stempeg.write import write_stems
@@ -27,6 +28,11 @@ def stemsep(
     start=None,
     duration=None,
 ):
+    bit_depth = get_bit_depth(stems_file)
+    codec = get_codec(extension, bit_depth)
+
+    print("Reading stem file...")
+
     info = Info(stems_file)
     S, sr = read_stems(stems_file, stem_id=idx, start=start, duration=duration)
 
@@ -49,22 +55,87 @@ def stemsep(
     else:
         stem_names = None
 
+    print("Done.")
+
+    print("Writing stems...")
+
     write_stems(
         (op.join(rootpath, basename), extension),
         S,
         sample_rate=sr,
         writer=FilesWriter(
-            multiprocess=False, output_sample_rate=sr, stem_names=stem_names
+            multiprocess=False,
+            output_sample_rate=sr,
+            stem_names=stem_names,
+            codec=codec,
         ),
     )
+
+    print("Done!")
 
     # TODO: write metadata back to .aiff files using Mutagen
 
 
-def cli():
+def get_codec(extension, bit_depth):
+    print("Getting codec...")
+
+    if extension == ".aiff" or extension == ".aif":
+        if bit_depth == 16:
+            codec = "pcm_s16be"
+        elif bit_depth == 24:
+            codec = "pcm_s24be"
+        elif bit_depth == 32:
+            codec = "pcm_s32be"
+        else:
+            raise ValueError(f"Unsupported bit depth: {bit_depth}")
+    elif extension == ".wav" or extension == ".wave":
+        if bit_depth == 16:
+            codec = "pcm_s16le"
+        elif bit_depth == 24:
+            codec = "pcm_s24le"
+        elif bit_depth == 32:
+            codec = "pcm_s32le"
+        else:
+            raise ValueError(f"Unsupported bit depth: {bit_depth}")
+    else:
+        raise ValueError(f"Unsupported extension: {extension}")
+
+    print(f"codec={codec}")
+    print("Done.")
+
+    return codec
+
+
+def get_bit_depth(file_path):
+    print("Extracting bit depth...")
+
+    bit_depth = int(
+        subprocess.check_output(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "a",
+                "-show_entries",
+                "stream=bits_per_raw_sample",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                file_path,
+            ]
+        ).split()[0]
+    )
+
+    print(f"bits_per_sample={bit_depth}")
+    print("Done.")
+
+    return bit_depth
+
+
+def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--version", "-V", action="version", version="1.0.0")
+    parser.add_argument("--version", "-v", action="version", version="1.0.0")
 
     parser.add_argument("filename", metavar="filename", help="Input STEM file")
 
@@ -92,4 +163,4 @@ def cli():
 
 
 if __name__ == "__main__":
-    cli()
+    main()
