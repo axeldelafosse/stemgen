@@ -375,6 +375,7 @@ def get_sample_rate():
 
 
 def strip_accents(text):
+    text = text.replace("é", "e")  # Fix issue on Linux with "é"
     text = unicodedata.normalize("NFKD", text)
     text = text.encode("ascii", "ignore")
     text = text.decode("utf-8")
