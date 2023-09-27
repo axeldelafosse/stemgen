@@ -47,7 +47,9 @@ parser.add_argument(
     "-o",
     "--output",
     dest="OUTPUT_PATH",
-    default="output" if INSTALL_DIR.as_posix() == PROCESS_DIR else ".",
+    default="output"
+    if str(INSTALL_DIR) == PROCESS_DIR or INSTALL_DIR.as_posix() == PROCESS_DIR
+    else ".",
     help="the path to the output folder",
 )
 parser.add_argument("-f", "--format", dest="FORMAT", default="alac", help="aac or alac")
@@ -411,7 +413,7 @@ def clean_dir():
 
     if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
         os.rename(f"{FILE_NAME}.stem.m4a", os.path.join("..", f"{FILE_NAME}.stem.m4a"))
-    shutil.rmtree(os.path.join(OUTPUT_PATH + "/" + FILE_NAME))
+    shutil.rmtree(os.path.join(OUTPUT_PATH, FILE_NAME))
 
     print("Done.")
 
