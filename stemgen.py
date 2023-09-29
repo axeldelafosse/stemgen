@@ -9,6 +9,7 @@ import subprocess
 from pathlib import Path
 import time
 import unicodedata
+import torch
 from metadata import get_cover, get_metadata
 
 LOGO = r"""
@@ -47,13 +48,11 @@ parser.add_argument(
     "-o",
     "--output",
     dest="OUTPUT_PATH",
-    default="output"
-    if str(INSTALL_DIR) == PROCESS_DIR or INSTALL_DIR.as_posix() == PROCESS_DIR
-    else ".",
+    default="output" if INSTALL_DIR.as_posix() == PROCESS_DIR else ".",
     help="the path to the output folder",
 )
 parser.add_argument("-f", "--format", dest="FORMAT", default="alac", help="aac or alac")
-parser.add_argument("-d", "--device", dest="DEVICE", default="cpu", help="cpu or cuda")
+parser.add_argument("-d", "--device", dest="DEVICE", help="cpu or cuda")
 parser.add_argument("-v", "--version", action="version", version=VERSION)
 args = parser.parse_args()
 
@@ -64,7 +63,15 @@ OUTPUT_PATH = (
     else os.path.join(PROCESS_DIR, args.OUTPUT_PATH)
 )
 FORMAT = args.FORMAT
-DEVICE = args.DEVICE
+
+# Automatically set DEVICE to "cuda" if CUDA is available, otherwise set it to "cpu"
+DEVICE = args.DEVICE if args.DEVICE is not None else ("cuda" if torch.cuda.is_available() else "cpu")
+# let user know which device is being used (cpu or gpu)
+if DEVICE == "cuda":
+    print("Using GPU for processing.")
+else:
+    print("Using CPU for processing.")
+
 PYTHON_EXEC = sys.executable if not None else "python3"
 
 # CONVERSION AND GENERATION
@@ -402,18 +409,21 @@ def setup_file():
 def clean_dir():
     print("Cleaning...")
 
-    if platform.system() == "Windows":
-        time.sleep(5)
-
-    os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
+    # Move out of the directory to be deleted
+    os.chdir(OUTPUT_PATH)
 
     for file in os.listdir(INPUT_DIR):
         if file.endswith(".m4a"):
             os.remove(os.path.join(INPUT_DIR, file))
 
-    if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
-        os.rename(f"{FILE_NAME}.stem.m4a", os.path.join("..", f"{FILE_NAME}.stem.m4a"))
-    shutil.rmtree(os.path.join(OUTPUT_PATH, FILE_NAME))
+    if os.path.isfile(os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME}.stem.m4a")):
+        os.rename(os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME}.stem.m4a"), os.path.join(OUTPUT_PATH, f"{FILE_NAME}.stem.m4a"))
+    
+    # Attempt directory deletion
+    try:
+        shutil.rmtree(os.path.join(OUTPUT_PATH, FILE_NAME))
+    except PermissionError:
+        print(f"Permission error encountered. Directory {os.path.join(OUTPUT_PATH, FILE_NAME)} might still be in use.")
 
     print("Done.")
 
