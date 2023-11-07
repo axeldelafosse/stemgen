@@ -188,6 +188,11 @@ def main():
 
     print("Found " + str(len(soloed_tracks)) + " solo-ed tracks.")
 
+    # Delete old files using the same file name in `stemgen/input` folder
+    for file in os.listdir(os.path.join(INSTALL_DIR, "input")):
+        if file.startswith(NAME):
+            os.remove(os.path.join(INSTALL_DIR, "input", file))
+
     # Unsolo the tracks
     for track in set.tracks:
         if track.solo:
@@ -222,8 +227,13 @@ def main():
 
     # Create metadata.part1.json and metadata.part2.json if double stems
     if len(soloed_tracks) == 8:
-        create_metadata_json(STEMS[:4], "metadata.part1.json")
-        create_metadata_json(STEMS[4:], "metadata.part2.json")
+        create_metadata_json(
+            STEMS[:4], os.path.join(INSTALL_DIR, "metadata.part1.json")
+        )
+        create_metadata_json(
+            STEMS[4:], os.path.join(INSTALL_DIR, "metadata.part2.json")
+        )
+        print("Created or updated metadata files.")
 
     # Create the stem file(s)
     if OS == "windows":

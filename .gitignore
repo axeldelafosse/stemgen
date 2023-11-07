@@ -26,3 +26,7 @@ __pycache__/
 # Python Egg
 *.egg-info/
 *.egg
+
+# Python dist and build
+dist/
+build/
