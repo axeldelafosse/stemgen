@@ -2,12 +2,10 @@
 
 import argparse
 import os
-import platform
 import shutil
 import sys
 import subprocess
 from pathlib import Path
-import time
 import json
 import unicodedata
 from metadata import get_cover, get_metadata
@@ -248,28 +246,39 @@ def setup_file():
 def clean_dir():
     print("Cleaning...")
 
-    if platform.system() == "Windows":
-        time.sleep(5)
-
-    os.chdir(os.path.join(OUTPUT_PATH, FILE_NAME))
+    os.chdir(OUTPUT_PATH)
 
     for file in os.listdir(INPUT_DIR):
         if file.endswith(".m4a"):
             os.remove(os.path.join(INPUT_DIR, file))
 
-    if os.path.isfile(f"{FILE_NAME}.stem.m4a"):
-        os.rename(f"{FILE_NAME}.stem.m4a", os.path.join("..", f"{FILE_NAME}.stem.m4a"))
-    if os.path.isfile(f"{FILE_NAME} [part 1].stem.m4a"):
+    if os.path.isfile(os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME}.stem.m4a")):
         os.rename(
-            f"{FILE_NAME} [part 1].stem.m4a",
-            os.path.join("..", f"{FILE_NAME} [part 1].stem.m4a"),
+            os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME}.stem.m4a"),
+            os.path.join(OUTPUT_PATH, f"{FILE_NAME}.stem.m4a"),
         )
-        if os.path.isfile(f"{FILE_NAME} [part 2].stem.m4a"):
+
+    if os.path.isfile(
+        os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME} [part 1].stem.m4a")
+    ):
+        os.rename(
+            os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME} [part 1].stem.m4a"),
+            os.path.join(OUTPUT_PATH, f"{FILE_NAME} [part 1].stem.m4a"),
+        )
+        if os.path.isfile(
+            os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME} [part 2].stem.m4a")
+        ):
             os.rename(
-                f"{FILE_NAME} [part 2].stem.m4a",
-                os.path.join("..", f"{FILE_NAME} [part 2].stem.m4a"),
+                os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME} [part 2].stem.m4a"),
+                os.path.join(OUTPUT_PATH, f"{FILE_NAME} [part 2].stem.m4a"),
             )
-    shutil.rmtree(os.path.join(OUTPUT_PATH, FILE_NAME))
+
+    try:
+        shutil.rmtree(os.path.join(OUTPUT_PATH, FILE_NAME))
+    except PermissionError:
+        print(
+            f"Permission error encountered. Directory {os.path.join(OUTPUT_PATH, FILE_NAME)} might still be in use."
+        )
 
     print("Done.")
 

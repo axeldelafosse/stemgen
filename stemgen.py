@@ -2,12 +2,10 @@
 
 import argparse
 import os
-import platform
 import shutil
 import sys
 import subprocess
 from pathlib import Path
-import time
 import unicodedata
 import torch
 from metadata import get_cover, get_metadata
@@ -48,7 +46,9 @@ parser.add_argument(
     "-o",
     "--output",
     dest="OUTPUT_PATH",
-    default="output" if INSTALL_DIR.as_posix() == PROCESS_DIR else ".",
+    default="output"
+    if str(INSTALL_DIR) == PROCESS_DIR or INSTALL_DIR.as_posix() == PROCESS_DIR
+    else ".",
     help="the path to the output folder",
 )
 parser.add_argument("-f", "--format", dest="FORMAT", default="alac", help="aac or alac")
@@ -65,8 +65,12 @@ OUTPUT_PATH = (
 FORMAT = args.FORMAT
 
 # Automatically set DEVICE to "cuda" if CUDA is available, otherwise set it to "cpu"
-DEVICE = args.DEVICE if args.DEVICE is not None else ("cuda" if torch.cuda.is_available() else "cpu")
-# let user know which device is being used (cpu or gpu)
+DEVICE = (
+    args.DEVICE
+    if args.DEVICE is not None
+    else ("cuda" if torch.cuda.is_available() else "cpu")
+)
+
 if DEVICE == "cuda":
     print("Using GPU for processing.")
 else:
@@ -409,7 +413,6 @@ def setup_file():
 def clean_dir():
     print("Cleaning...")
 
-    # Move out of the directory to be deleted
     os.chdir(OUTPUT_PATH)
 
     for file in os.listdir(INPUT_DIR):
@@ -417,13 +420,17 @@ def clean_dir():
             os.remove(os.path.join(INPUT_DIR, file))
 
     if os.path.isfile(os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME}.stem.m4a")):
-        os.rename(os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME}.stem.m4a"), os.path.join(OUTPUT_PATH, f"{FILE_NAME}.stem.m4a"))
-    
-    # Attempt directory deletion
+        os.rename(
+            os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME}.stem.m4a"),
+            os.path.join(OUTPUT_PATH, f"{FILE_NAME}.stem.m4a"),
+        )
+
     try:
         shutil.rmtree(os.path.join(OUTPUT_PATH, FILE_NAME))
     except PermissionError:
-        print(f"Permission error encountered. Directory {os.path.join(OUTPUT_PATH, FILE_NAME)} might still be in use.")
+        print(
+            f"Permission error encountered. Directory {os.path.join(OUTPUT_PATH, FILE_NAME)} might still be in use."
+        )
 
     print("Done.")
 
