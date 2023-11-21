@@ -27,6 +27,7 @@ def stemsep(
     idx=None,
     start=None,
     duration=None,
+    check=False,
 ):
     bit_depth = get_bit_depth(stems_file)
     codec = get_codec(extension, bit_depth)
@@ -34,7 +35,13 @@ def stemsep(
     print("Reading stem file...")
 
     info = Info(stems_file)
-    S, sr = read_stems(stems_file, stem_id=idx, start=start, duration=duration)
+    S, sr = read_stems(
+        stems_file, stem_id=idx, start=start, duration=duration, check=check
+    )
+
+    if check:
+        print("Done. Integrity check succeeded!")
+        return
 
     rootpath, filename = op.split(stems_file)
 
@@ -139,6 +146,8 @@ def main():
 
     parser.add_argument("filename", metavar="filename", help="Input STEM file")
 
+    parser.add_argument("--check", action="store_true", help="Run an integrity check")
+
     parser.add_argument(
         "--extension",
         metavar="extension",
@@ -159,7 +168,15 @@ def main():
 
     args = parser.parse_args()
 
-    stemsep(args.filename, args.outdir, args.extension, args.id, args.s, args.t)
+    stemsep(
+        args.filename,
+        args.outdir,
+        args.extension,
+        args.id,
+        args.s,
+        args.t,
+        args.check,
+    )
 
 
 if __name__ == "__main__":

@@ -124,6 +124,7 @@ def read_stems(
     sample_rate=None,
     reader=StreamsReader(),
     multiprocess=False,
+    check=False,
 ):
     """Read stems into numpy tensor
 
@@ -248,7 +249,7 @@ def read_stems(
         channels = min(_chans)
     else:
         raise RuntimeError(
-            "Stems do not have the same number of channels per substream"
+            "Stems do not have the same number of channels per substream."
         )
 
     # set channels to minimum channel per stream
@@ -287,7 +288,12 @@ def read_stems(
         ]
     stem_durations = np.array([t.shape[0] for t in stems])
     if not (stem_durations == stem_durations[0]).all():
-        warnings.warn("Stems differ in length and were shortend")
+        if check:
+            raise RuntimeError("Stems differ in length. Integrity check failed.")
+        else:
+            warnings.warn(
+                "Stems differ in length and were shortend. Something might be wrong!"
+            )
         min_length = np.min(stem_durations)
         stems = [t[:min_length, :] for t in stems]
 
