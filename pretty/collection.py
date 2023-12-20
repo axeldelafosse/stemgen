@@ -10,6 +10,7 @@ import argparse
 from traktor_nml_utils import TraktorCollection
 from pathlib import Path
 import csv
+import json
 
 
 def main():
@@ -98,6 +99,9 @@ def main():
     with open("collection.csv", "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(data)
+
+    with open("collection.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
     print("Done.")
 
