@@ -77,31 +77,40 @@ def main():
                 ):
                     print("--> " + regular.location.file)
 
-                    # Write the integrated LUFS to "Comment" (info.comment)
-                    try:
-                        if (
-                            regular.info.comment is None
-                            or not regular.info.comment.startswith("LUFS:")
-                        ):
-                            # TODO: Windows support
-                            data, rate = sf.read(
-                                "/Volumes/"
-                                + regular.location.volume
-                                + regular.location.dir.replace(":", "")
-                                + regular.location.file
-                            )  # load audio (with shape (samples, channels))
-                            meter = pyln.Meter(rate)  # create BS.1770 meter
-                            loudness = meter.integrated_loudness(
-                                data
-                            )  # measure loudness
+                    # Write the integrated LUFS to "Comment 2" (info.rating)
+                    if (
+                        regular.info.rating is None
+                        or not regular.info.rating.startswith("LUFS:")
+                    ):
+                        # TODO: Windows path support
+                        stem_file_path = (
+                            "/Volumes/"
+                            + stem.location.volume
+                            + stem.location.dir.replace(":", "")
+                            + stem.location.file
+                        )
+                        regular_file_path = (
+                            "/Volumes/"
+                            + regular.location.volume
+                            + regular.location.dir.replace(":", "")
+                            + regular.location.file
+                        )
+
+                        try:
+                            # Load audio (with shape (samples, channels))
+                            data, rate = sf.read(regular_file_path)
+                            # Create BS.1770 meter
+                            meter = pyln.Meter(rate)
+                            # Measure loudness
+                            loudness = meter.integrated_loudness(data)
                             lufs = "LUFS: " + str(
                                 Decimal(str(loudness)).quantize(Decimal("1.00"))
                             )
                             print(lufs)
-                            regular.info.comment = lufs
-                            stem.info.comment = lufs
-                    except Exception as e:
-                        print(e)
+                            regular.info.rating = lufs  # comment2
+                            stem.info.rating = lufs  # comment2
+                        except Exception as e:
+                            print(e)
 
                     # Write the open key to "Key Text" (info.key)
                     musical_key_to_open_key = {
@@ -157,6 +166,8 @@ def main():
                         regular.info.playcount = stem.info.playcount
                     if stem.info.last_played:
                         regular.info.last_played = stem.info.last_played
+                    if stem.info.comment:
+                        regular.info.comment = stem.info.comment
 
                     regular.lock = 1
                     regular.lock_modification_time = stem.lock_modification_time
