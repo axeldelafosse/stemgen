@@ -6,11 +6,11 @@ parent = os.path.dirname(current)
 parent2 = os.path.dirname(parent)
 sys.path.append(parent2)
 
-import stemsep
+import pretty
 
 
 def main():
-    stemsep.main()
+    pretty.pretty_playlists()
 
 
 if __name__ == "__main__":
