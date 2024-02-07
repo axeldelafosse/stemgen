@@ -244,13 +244,9 @@ class StemCreator:
         outputFilePath = "".join([root, stemOutExtension])
         _removeFile(outputFilePath)
 
-        folderName = "GPAC_win" if _windows else "GPAC_mac"
-        executable = "mp4box.exe" if _windows else "MP4Box"
-        mp4box = (
-            _findCmd(executable)
-            if _linux
-            else os.path.join(_getProgramPath(), folderName, executable)
-        )
+        folderName = "GPAC_win" if _windows else "GPAC_mac" if _macos else "GPAC_linux"
+        executable = "mp4box.exe" if _windows else "mp4box" if _macos else "MP4Box"
+        mp4box = os.path.join(_getProgramPath(), folderName, executable)
 
         print("\n[Done 0/6]\n")
         sys.stdout.flush()
@@ -482,13 +478,11 @@ class StemMetadataViewer:
         self._metadata = {}
 
         if stemFile:
-            folderName = "GPAC_win" if _windows else "GPAC_mac"
-            executable = "mp4box.exe" if _windows else "MP4Box"
-            mp4box = (
-                _findCmd(executable)
-                if _linux
-                else os.path.join(_getProgramPath(), folderName, executable)
+            folderName = (
+                "GPAC_win" if _windows else "GPAC_mac" if _macos else "GPAC_linux"
             )
+            executable = "mp4box.exe" if _windows else "mp4box" if _macos else "MP4Box"
+            mp4box = os.path.join(_getProgramPath(), folderName, executable)
 
             callArgs = [mp4box]
             callArgs.extend(["-dump-udta", "0:stem", stemFile])
