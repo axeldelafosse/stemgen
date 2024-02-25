@@ -54,6 +54,8 @@ parser.add_argument(
 parser.add_argument("-f", "--format", dest="FORMAT", default="alac", help="aac or alac")
 parser.add_argument("-d", "--device", dest="DEVICE", help="cpu or cuda")
 parser.add_argument("-v", "--version", action="version", version=VERSION)
+parser.add_argument('-n', "--model_name", dest="MODEL_NAME", help="name of the model to use")
+parser.add_argument('-s', "--model_shifts", dest="MODEL_SHIFTS", help="number of shifts for demucs to use")
 args = parser.parse_args()
 
 INPUT_PATH = args.POSITIONAL_INPUT_PATH or args.INPUT_PATH
@@ -77,6 +79,18 @@ else:
     print("Using CPU for processing.")
 
 PYTHON_EXEC = sys.executable if not None else "python3"
+
+MODEL_NAME = (
+    args.MODEL_NAME
+    if args.MODEL_NAME is not None
+    else "htdemucs"
+)
+
+MODEL_SHIFTS = (
+    args.MODEL_SHIFTS
+    if args.MODEL_SHIFTS is not None
+    else "1"
+)
 
 # CONVERSION AND GENERATION
 
@@ -206,7 +220,9 @@ def split_stems():
                 "demucs",
                 "--int24",
                 "-n",
-                "htdemucs",
+                MODEL_NAME,
+                "--shifts",
+                MODEL_SHIFTS,
                 "-d",
                 DEVICE,
                 FILE_PATH,
@@ -222,7 +238,9 @@ def split_stems():
                 "-m",
                 "demucs",
                 "-n",
-                "htdemucs",
+                MODEL_NAME,
+                "--shifts",
+                MODEL_SHIFTS,
                 "-d",
                 DEVICE,
                 FILE_PATH,
@@ -240,10 +258,10 @@ def create_stem():
 
     stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
     stem_args += [
-        f"{OUTPUT_PATH}/{FILE_NAME}/htdemucs/{FILE_NAME}/drums.wav",
-        f"{OUTPUT_PATH}/{FILE_NAME}/htdemucs/{FILE_NAME}/bass.wav",
-        f"{OUTPUT_PATH}/{FILE_NAME}/htdemucs/{FILE_NAME}/other.wav",
-        f"{OUTPUT_PATH}/{FILE_NAME}/htdemucs/{FILE_NAME}/vocals.wav",
+        f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}/drums.wav",
+        f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}/bass.wav",
+        f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}/other.wav",
+        f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}/vocals.wav",
     ]
     stem_args += [
         "-x",
