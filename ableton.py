@@ -31,6 +31,7 @@ import pyautogui
 import time
 import logging
 from metadata import create_metadata_json, ableton_color_index_to_hex
+from shutil import which
 
 # Settings
 NAME = "track"
@@ -51,7 +52,8 @@ if OS == "macos":
 
 def say(text):
     if OS == "windows":
-        os.system("wsay " + text)
+        if which("wsay") is not None:
+            os.system("wsay " + text)
     else:
         os.system("say " + text)
     return
@@ -158,8 +160,7 @@ def main():
         print("Retina Display: " + str(IS_RETINA))
 
     # Get Ableton Live set
-    set = live.Set()
-    set.scan(scan_clip_names=True, scan_device=True)
+    set = live.Set(scan=True)
 
     switch_to_ableton()
     time.sleep(1)
