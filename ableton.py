@@ -74,7 +74,9 @@ def switch_to_ableton():
     pyautogui.press("tab")
     time.sleep(1)
     x, y = pyautogui.locateCenterOnScreen(
-        os.path.join(INSTALL_DIR, "screenshots", OS, "logo.png"), confidence=0.9
+        os.path.join(INSTALL_DIR, "screenshots", OS, "logo.png"),
+        confidence=0.9,
+        grayscale=True,
     )
     print("Found it!")
     if IS_RETINA == True:
@@ -113,12 +115,18 @@ def export(track, position):
     # Wait for the export to finish
     time.sleep(1)
     while True:
-        location = pyautogui.locateOnScreen(
-            os.path.join(INSTALL_DIR, "screenshots", OS, "export.png"), confidence=0.9
-        )
-        if location != None:
-            print("Exporting...")
-        else:
+        try:
+            location = pyautogui.locateOnScreen(
+                os.path.join(INSTALL_DIR, "screenshots", OS, "export.png"),
+                confidence=0.9,
+                grayscale=True,
+            )
+            if location != None:
+                print("Exporting...")
+            else:
+                print("Exported: " + NAME + "." + str(position) + ".aif")
+                break
+        except:
             print("Exported: " + NAME + "." + str(position) + ".aif")
             break
 
