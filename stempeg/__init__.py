@@ -22,7 +22,7 @@ from .cmds import check_available_aac_encoders
 
 import re
 import subprocess as sp
-import pkg_resources
+import importlib.resources
 
 __version__ = "1.0.0"
 
@@ -35,7 +35,7 @@ def default_metadata():
     filename : str
         Path to the json file
     """
-    return pkg_resources.resource_filename(__name__, "../metadata.json")
+    return importlib.resources.files(__name__) / "../metadata.json"
 
 
 def ffmpeg_version():

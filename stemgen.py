@@ -46,16 +46,25 @@ parser.add_argument(
     "-o",
     "--output",
     dest="OUTPUT_PATH",
-    default="output"
-    if str(INSTALL_DIR) == PROCESS_DIR or INSTALL_DIR.as_posix() == PROCESS_DIR
-    else ".",
+    default=(
+        "output"
+        if str(INSTALL_DIR) == PROCESS_DIR or INSTALL_DIR.as_posix() == PROCESS_DIR
+        else "."
+    ),
     help="the path to the output folder",
 )
 parser.add_argument("-f", "--format", dest="FORMAT", default="alac", help="aac or alac")
-parser.add_argument("-d", "--device", dest="DEVICE", help="cpu or cuda")
+parser.add_argument("-d", "--device", dest="DEVICE", help="cpu or cuda or mps")
 parser.add_argument("-v", "--version", action="version", version=VERSION)
-parser.add_argument('-n', "--model_name", dest="MODEL_NAME", help="name of the model to use")
-parser.add_argument('-s', "--model_shifts", dest="MODEL_SHIFTS", help="number of shifts for demucs to use")
+parser.add_argument(
+    "-n", "--model_name", dest="MODEL_NAME", help="name of the model to use"
+)
+parser.add_argument(
+    "-s",
+    "--model_shifts",
+    dest="MODEL_SHIFTS",
+    help="number of shifts for demucs to use",
+)
 args = parser.parse_args()
 
 INPUT_PATH = args.POSITIONAL_INPUT_PATH or args.INPUT_PATH
@@ -66,31 +75,30 @@ OUTPUT_PATH = (
 )
 FORMAT = args.FORMAT
 
-# Automatically set DEVICE to "cuda" if CUDA is available, otherwise set it to "cpu"
+# Automatically set DEVICE to "cuda" if CUDA is available or "mps" if Metal is available, otherwise set it to "cpu"
 DEVICE = (
     args.DEVICE
     if args.DEVICE is not None
-    else ("cuda" if torch.cuda.is_available() else "cpu")
+    else (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available() else "cpu"
+    )
 )
 
 if DEVICE == "cuda":
     print("Using GPU for processing.")
+elif DEVICE == "mps":
+    print("Using Metal for processing.")
 else:
     print("Using CPU for processing.")
 
+
 PYTHON_EXEC = sys.executable if not None else "python3"
 
-MODEL_NAME = (
-    args.MODEL_NAME
-    if args.MODEL_NAME is not None
-    else "htdemucs"
-)
+MODEL_NAME = args.MODEL_NAME if args.MODEL_NAME is not None else "htdemucs"
 
-MODEL_SHIFTS = (
-    args.MODEL_SHIFTS
-    if args.MODEL_SHIFTS is not None
-    else "1"
-)
+MODEL_SHIFTS = args.MODEL_SHIFTS if args.MODEL_SHIFTS is not None else "1"
 
 # CONVERSION AND GENERATION
 

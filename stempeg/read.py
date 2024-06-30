@@ -118,7 +118,7 @@ def read_stems(
     duration=None,
     stem_id=None,
     always_3d=False,
-    dtype=np.float_,
+    dtype=np.float32,
     ffmpeg_format="f32le",
     info=None,
     sample_rate=None,
