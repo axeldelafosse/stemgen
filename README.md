@@ -11,6 +11,13 @@ Stemgen uses `demucs` to separate the 4 stems and `ni-stem` to create the Stem f
 
 Our new file contains four stems: drums, bass, other (melody) and vocals.
 
+> [!NOTE]
+> Traktor Pro 4 includes stem separation! Fortunately, it is backward-compatible and you can upgrade without any issue. But unfortunately, Stemgen still makes sense because:
+>
+> - Stemgen is the only way to create lossless ALAC stem files... for now! Please make yourself heard on the [forum](https://community.native-instruments.com/discussion/33853/lossless-stems) if you think lossless stems matters
+> - Stemgen is the only way to create your own stem files from Ableton Live and from a CLI
+> - Stemgen writes the metadata of the original files to the stem files, so you can easily sync them between computers
+
 ## Why?
 
 > "It's no secret that I'm fully behind the approach to encourage individuality in creativity and for artists to play differently. Stems is a new format that mirrors my constant quest for spontaneity to drive the art of performance forwards. I hope that releasing my album [From My Mind To Yours](https://www.junodownload.com/products/richie-hawtin-from-my-mind-to-yours/3318751-02/) in this format, mastered by LANDR, inspires others to support the approach and bring even more flexibility to the art of DJing amongst its most progressive supporters." – Richie Hawtin
@@ -48,14 +55,6 @@ You can use `stemgen.py` to generate stems:
 - `$ python3 stemgen.py track.wav`
 - Have fun! Your new `.stem.m4a` file is in `output` dir
 - Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
-
-## Running Stemgen with Docker
-
-To avoid having to install dependencies manually, you can run stemgen with docker:
-
-```sh
-scripts/run_stemgen_with_docker.sh /path/to/track.wav`
-```
 
 ## Bring your own stems
 
