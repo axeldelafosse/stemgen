@@ -4,7 +4,7 @@ Stemgen is a Stem file generator. Convert any track into a Stem and have fun wit
 
 A [Stem](https://www.native-instruments.com/en/specials/stems/) file is an open, multi-channel audio file that contains a track split into four musical elements – bass, drums, vocals, and melody, for example. With each element available independently, you have more control over the music you play.
 
-Stemgen uses `demucs` to separate the 4 stems and `ni-stem` to create the Stem file.
+Stemgen uses [`bs_roformer`](https://github.com/axeldelafosse/BS-RoFormer) or [`demucs`](https://github.com/adefossez/demucs) to separate the 4 stems and `ni-stem` to create the Stem file.
 
 ![Screenshot Before](./screenshots/before.png)
 ![Screenshot After](./screenshots/after.png)
@@ -24,10 +24,11 @@ Our new file contains four stems: drums, bass, other (melody) and vocals.
 
 Stems are fun but nobody's releasing them. Stemgen is a way to create your own stems with only one command.
 
-**May 2023 Update**: I saw François K last week in Paris at the Loft Babies party and I discovered
-that he's playing with Stems. I highly recommend checking out his videos on YouTube: https://www.youtube.com/playlist?list=PLCr4LSsJFk48tmNoKn-l7mgsB5XUd2Af9.
-He's a legend and a true pioneer. I'm so happy to see him having fun with Stems.
-And trust me: it's even better in real life. Can't wait to see him again!
+> [!NOTE]
+> May 2023 Update:
+> I saw François K last week in Paris at the Loft Babies party and I discovered that he's playing with Stems. I highly recommend checking out his videos on YouTube: https://www.youtube.com/playlist?list=PLCr4LSsJFk48tmNoKn-l7mgsB5XUd2Af9.
+> He's a legend and a true pioneer. I'm so happy to see him having fun with Stems.
+> And trust me: it's even better in real life. Can't wait to see him again!
 
 > "There is a really big difference between using a tool, a computer as a tool, to make it do specific things we want it to do, in the manner in which we want it to accomplish it. In most other situations, we all find ourselves dealing with a pre-programmed or pre-determined path that the software designer has decided we must use the software in order to get certain things done. And I think that makes it that we, little by little, become controlled by the path that was designed by the people who wrote the software and forced into these gullies that they created of usage, that this is how we are supposed to be doing things. And after a while I think it's making us forget who we were and what the essence of what the music was supposed to be about and really represented.
 >
@@ -43,7 +44,7 @@ And trust me: it's even better in real life. Can't wait to see him again!
 ## Requirement
 
 - python >= 3.9 https://www.python.org
-- demucs v4 https://github.com/facebookresearch/demucs
+- bs_roformer https://github.com/axeldelafosse/BS-RoFormer or demucs v4 https://github.com/adefossez/demucs
 - ffmpeg https://www.ffmpeg.org
 - sox https://sox.sourceforge.net
 - mutagen https://mutagen.readthedocs.io

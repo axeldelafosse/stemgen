@@ -28,7 +28,7 @@ Usage: python3 stemgen.py -i [INPUT_PATH] -o [OUTPUT_PATH]
 
 Supported input file format: {SUPPORTED_FILES}
 """
-VERSION = "6.0.0"
+VERSION = "7.0.0"
 
 INSTALL_DIR = Path(__file__).parent.absolute()
 PROCESS_DIR = os.getcwd()
@@ -219,43 +219,69 @@ def convert():
 def split_stems():
     print("Splitting stems...")
 
-    if BIT_DEPTH == 24:
-        print("Using 24-bit model...")
+    if MODEL_NAME == "bs_roformer":
+        print("Using BS RoFormer...")
+
         subprocess.run(
             [
                 PYTHON_EXEC,
                 "-m",
-                "demucs",
-                "--int24",
-                "-n",
-                MODEL_NAME,
-                "--shifts",
-                MODEL_SHIFTS,
-                "-d",
-                DEVICE,
+                "bs_roformer.inference",
                 FILE_PATH,
-                "-o",
-                f"{OUTPUT_PATH}/{FILE_NAME}",
+                "--output_folder",
+                OUTPUT_PATH,
+                "--pcm_type",
+                "PCM_24" if BIT_DEPTH == 24 else "PCM_16",
             ]
         )
+        # Create full directory structure to match Demucs
+        os.makedirs(f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}", exist_ok=True)
+        stem_files = ["drums", "bass", "other", "vocals"]
+        for stem in stem_files:
+            src = f"{OUTPUT_PATH}/{FILE_NAME}_{stem}.wav"
+            dst = f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}/{stem}.wav"
+            if os.path.exists(src):
+                shutil.move(src, dst)
     else:
-        print("Using 16-bit model...")
-        subprocess.run(
-            [
-                PYTHON_EXEC,
-                "-m",
-                "demucs",
-                "-n",
-                MODEL_NAME,
-                "--shifts",
-                MODEL_SHIFTS,
-                "-d",
-                DEVICE,
-                FILE_PATH,
-                "-o",
-                f"{OUTPUT_PATH}/{FILE_NAME}",
-            ]
-        )
+        print("Using Demucs...")
+
+        if BIT_DEPTH == 24:
+            print("Using 24-bit model...")
+            subprocess.run(
+                [
+                    PYTHON_EXEC,
+                    "-m",
+                    "demucs",
+                    "--int24",
+                    "-n",
+                    MODEL_NAME,
+                    "--shifts",
+                    MODEL_SHIFTS,
+                    "-d",
+                    DEVICE,
+                    FILE_PATH,
+                    "-o",
+                    f"{OUTPUT_PATH}/{FILE_NAME}",
+                ]
+            )
+        else:
+            print("Using 16-bit model...")
+            subprocess.run(
+                [
+                    PYTHON_EXEC,
+                    "-m",
+                    "demucs",
+                    "-n",
+                    MODEL_NAME,
+                    "--shifts",
+                    MODEL_SHIFTS,
+                    "-d",
+                    DEVICE,
+                    FILE_PATH,
+                    "-o",
+                    f"{OUTPUT_PATH}/{FILE_NAME}",
+                ]
+            )
 
     print("Done.")
 
@@ -300,14 +326,25 @@ def setup():
         print("Please install ni-stem before running Stem.")
         sys.exit(2)
 
-    if (
-        subprocess.run(
-            [PYTHON_EXEC, "-m", "demucs", "-h"], capture_output=True, text=True
-        ).stdout.strip()
-        == ""
-    ):
-        print("Please install demucs before running Stemgen.")
-        sys.exit(2)
+    if MODEL_NAME == "htdemucs":
+        if (
+            subprocess.run(
+                [PYTHON_EXEC, "-m", "demucs", "-h"], capture_output=True, text=True
+            ).stdout.strip()
+            == ""
+        ):
+            print("Please install demucs before running Stemgen.")
+            sys.exit(2)
+
+    if MODEL_NAME == "bs_roformer":
+        if (
+            subprocess.run(
+                [PYTHON_EXEC, "-m", "bs_roformer.inference", "-h"], capture_output=True, text=True
+            ).stdout.strip()
+            == ""
+        ):
+            print("Please install bs_roformer before running Stemgen.")
+            sys.exit(2)
 
     if not os.path.exists(OUTPUT_PATH):
         os.mkdir(OUTPUT_PATH)
