@@ -40,7 +40,7 @@ You can also use ableton.py to automatically create the stems from Ableton Live.
 """
 VERSION = "2.0.0"
 
-INSTALL_DIR = Path(__file__).parent.parent.absolute()
+INSTALL_DIR = Path(__file__).parent.absolute()
 PROCESS_DIR = os.getcwd()
 
 parser = argparse.ArgumentParser(

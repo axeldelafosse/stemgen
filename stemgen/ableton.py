@@ -38,7 +38,7 @@ NAME = "track"
 IS_RETINA = False
 OS = "windows" if platform.system() == "Windows" else "macos"
 PYTHON_EXEC = sys.executable if not None else "python3"
-INSTALL_DIR = Path(__file__).parent.parent.absolute()
+INSTALL_DIR = Path(__file__).parent.absolute()
 STEMS = []
 
 # https://github.com/asweigart/pyautogui/issues/790

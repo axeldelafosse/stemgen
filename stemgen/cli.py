@@ -31,7 +31,7 @@ Supported input file format: {SUPPORTED_FILES}
 VERSION = "7.0.0"
 
 # Get the package root directory
-PACKAGE_DIR = Path(__file__).parent.parent.absolute()
+PACKAGE_DIR = Path(__file__).parent.absolute()
 PROCESS_DIR = os.getcwd()
 
 parser = argparse.ArgumentParser(
@@ -58,12 +58,13 @@ parser.add_argument("-f", "--format", dest="FORMAT", default="alac", help="aac o
 parser.add_argument("-d", "--device", dest="DEVICE", help="cpu or cuda or mps")
 parser.add_argument("-v", "--version", action="version", version=VERSION)
 parser.add_argument(
-    "-n", "--model_name", dest="MODEL_NAME", help="name of the model to use"
+    "-n", "--model_name", dest="MODEL_NAME", default="bs_roformer", help="name of the model to use"
 )
 parser.add_argument(
     "-s",
     "--model_shifts",
     dest="MODEL_SHIFTS",
+    default="1",
     help="number of shifts for demucs to use",
 )
 args = parser.parse_args()
@@ -97,9 +98,9 @@ else:
 
 PYTHON_EXEC = sys.executable if not None else "python3"
 
-MODEL_NAME = args.MODEL_NAME if args.MODEL_NAME is not None else "htdemucs"
+MODEL_NAME = args.MODEL_NAME
 
-MODEL_SHIFTS = args.MODEL_SHIFTS if args.MODEL_SHIFTS is not None else "1"
+MODEL_SHIFTS = args.MODEL_SHIFTS
 
 # CONVERSION AND GENERATION
 
@@ -325,27 +326,21 @@ def setup():
             sys.exit(2)
 
     if not os.path.exists(os.path.join(PACKAGE_DIR, "ni-stem/ni-stem")):
-        print("Please install ni-stem before running Stem.")
+        print("Please install ni-stem before running Stemgen.")
         sys.exit(2)
 
     if MODEL_NAME == "htdemucs":
-        if (
-            subprocess.run(
-                [PYTHON_EXEC, "-m", "demucs", "-h"], capture_output=True, text=True
-            ).stdout.strip()
-            == ""
-        ):
+        try:
+            import demucs
+        except ImportError:
             print("Please install demucs before running Stemgen.")
             sys.exit(2)
 
     if MODEL_NAME == "bs_roformer":
-        if (
-            subprocess.run(
-                [PYTHON_EXEC, "-m", "bs_roformer", "-h"], capture_output=True, text=True
-            ).stdout.strip()
-            == ""
-        ):
-            print("Please install bs_roformer before running Stemgen.")
+        try:
+            import bs_roformer
+        except ImportError:
+            print("Please install Lossless-BS-RoFormer before running Stemgen.")
             sys.exit(2)
 
     if not os.path.exists(OUTPUT_PATH):
