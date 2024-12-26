@@ -227,12 +227,13 @@ def split_stems():
             [
                 PYTHON_EXEC,
                 "-m",
-                "bs_roformer.inference",
+                "bs_roformer",
                 FILE_PATH,
                 "--output_folder",
                 OUTPUT_PATH,
                 "--pcm_type",
                 "PCM_24" if BIT_DEPTH == 24 else "PCM_16",
+                "--lossless",
             ]
         )
         # Create full directory structure to match Demucs
@@ -340,7 +341,7 @@ def setup():
     if MODEL_NAME == "bs_roformer":
         if (
             subprocess.run(
-                [PYTHON_EXEC, "-m", "bs_roformer.inference", "-h"], capture_output=True, text=True
+                [PYTHON_EXEC, "-m", "bs_roformer", "-h"], capture_output=True, text=True
             ).stdout.strip()
             == ""
         ):
