@@ -11,13 +11,17 @@
 
 import argparse
 import subprocess
+import os
+from os import path as op
+from pathlib import Path
 
+# Use local stempeg fork
+PACKAGE_DIR = Path(__file__).parent.parent.absolute()
+import sys
+sys.path.insert(0, str(PACKAGE_DIR))
 from stempeg.read import Info, read_stems
 from stempeg.write import write_stems
 from stempeg.write import FilesWriter
-
-from os import path as op
-import os
 
 
 def stemsep(
@@ -36,7 +40,7 @@ def stemsep(
 
     info = Info(stems_file)
     S, sr = read_stems(
-        stems_file, stem_id=idx, start=start, duration=duration, check=check
+        stems_file, stem_id=idx, start=start, duration=duration
     )
 
     if check:
