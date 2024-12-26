@@ -16,7 +16,7 @@ import atexit
 import ffmpeg
 import numpy as np
 
-import stempeg
+import stemgen.stempeg as stempeg
 
 from .cmds import FFMPEG_PATH, mp4box_exists, get_aac_codec, find_cmd
 
