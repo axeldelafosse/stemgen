@@ -31,7 +31,7 @@ import pyautogui
 import time
 import logging
 from stemgen.metadata import create_metadata_json, ableton_color_index_to_hex
-from shutil import which
+from shutil import which, move
 
 # Settings
 NAME = "track"
@@ -197,10 +197,11 @@ def main():
 
     print("Found " + str(len(soloed_tracks)) + " solo-ed tracks.")
 
-    # Delete old files using the same file name in `stemgen/input` folder
-    for file in os.listdir(os.path.join(INSTALL_DIR, "input")):
+    # Delete old files using the same file name in `/tmp` folder
+    tmp_path = "/tmp" if OS != "windows" else os.path.join(os.getenv("TEMP"))
+    for file in os.listdir(tmp_path):
         if file.startswith(NAME):
-            os.remove(os.path.join(INSTALL_DIR, "input", file))
+            os.remove(os.path.join(tmp_path, file))
 
     # Unsolo the tracks
     for track in set.tracks:
@@ -210,9 +211,9 @@ def main():
     # Export master
     export(soloed_tracks, 0)
 
-    # Check if master was exported in `stemgen/input` folder
-    if not os.path.exists(os.path.join(INSTALL_DIR, "input", NAME + ".0.aif")):
-        print("You need to set `stemgen/input` as the output folder.")
+    # Check if master was exported in `/tmp` folder
+    if not os.path.exists(os.path.join(tmp_path, NAME + ".0.aif")):
+        print("You need to set `/tmp` as the output folder.")
         say("Oops")
         exit()
 
@@ -251,7 +252,9 @@ def main():
                 PYTHON_EXEC,
                 os.path.join(INSTALL_DIR, "stem.py"),
                 "-i",
-                os.path.join(INSTALL_DIR, "input", NAME + ".0.aif"),
+                os.path.join(tmp_path, NAME + ".0.aif"),
+                "-o",
+                os.path.join(tmp_path, "output"),
                 "-f",
                 "aac",
             ]
@@ -262,9 +265,17 @@ def main():
                 PYTHON_EXEC,
                 os.path.join(INSTALL_DIR, "stem.py"),
                 "-i",
-                os.path.join(INSTALL_DIR, "input", NAME + ".0.aif"),
+                os.path.join(tmp_path, NAME + ".0.aif"),
+                "-o",
+                os.path.join(tmp_path, "output"),
             ]
         )
+
+    # Move the stems to the Desktop folder
+    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+    for file in os.listdir(os.path.join(tmp_path, "output")):
+        if file.startswith(NAME):
+            move(os.path.join(tmp_path, "output", file), os.path.join(desktop_path, file))
 
     print("Done! Enjoy :)")
     say("Done")
