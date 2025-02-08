@@ -41,6 +41,7 @@ def download_model(url: str, dest_path: Path):
 
 @app.function(
     gpu="A10G", # L40S
+    timeout=600, # 10 minutes
     volumes={
         STEMGEN_DIR: volume
     },
