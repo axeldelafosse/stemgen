@@ -61,6 +61,9 @@ parser.add_argument(
     "-n", "--model_name", dest="MODEL_NAME", default="bs_roformer", help="name of the model to use"
 )
 parser.add_argument(
+    "-m", "--model_path", dest="MODEL_PATH", help="path to the model to use"
+)
+parser.add_argument(
     "-s",
     "--model_shifts",
     dest="MODEL_SHIFTS",
@@ -99,7 +102,7 @@ else:
 PYTHON_EXEC = sys.executable if not None else "python3"
 
 MODEL_NAME = args.MODEL_NAME
-
+MODEL_PATH = args.MODEL_PATH
 MODEL_SHIFTS = args.MODEL_SHIFTS
 
 # CONVERSION AND GENERATION
@@ -223,20 +226,25 @@ def split_stems():
 
     if MODEL_NAME == "bs_roformer":
         print("Using BS RoFormer...")
+        cmd = [
+            PYTHON_EXEC,
+            "-m",
+            "bs_roformer",
+            FILE_PATH,
+            "--output_folder",
+            OUTPUT_PATH,
+            "--pcm_type",
+            "PCM_24" if BIT_DEPTH == 24 else "PCM_16",
+            "--lossless",
+        ]
 
-        subprocess.run(
-            [
-                PYTHON_EXEC,
-                "-m",
-                "bs_roformer",
-                FILE_PATH,
-                "--output_folder",
-                OUTPUT_PATH,
-                "--pcm_type",
-                "PCM_24" if BIT_DEPTH == 24 else "PCM_16",
-                "--lossless",
-            ]
-        )
+        if MODEL_PATH:
+            print(f"Using specified model: {MODEL_PATH}")
+            cmd.append("--start_check_point")
+            cmd.append(MODEL_PATH)
+
+        subprocess.run(cmd)
+
         # Create full directory structure to match Demucs
         os.makedirs(f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}", exist_ok=True)
         stem_files = ["drums", "bass", "other", "vocals"]
