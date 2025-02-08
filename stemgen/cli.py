@@ -28,7 +28,7 @@ Usage: stemgen -i [INPUT_PATH] -o [OUTPUT_PATH]
 
 Supported input file format: {SUPPORTED_FILES}
 """
-VERSION = "7.0.0"
+VERSION = "2.0.5"
 
 # Get the package root directory
 PACKAGE_DIR = Path(__file__).parent.absolute()

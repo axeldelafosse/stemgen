@@ -38,7 +38,7 @@ Example: 'track.0.wav' for the master file then 'track.1.wav' for the first stem
 
 You can also use ableton.py to automatically create the stems from Ableton Live.
 """
-VERSION = "2.0.0"
+VERSION = "2.0.5"
 
 INSTALL_DIR = Path(__file__).parent.absolute()
 PROCESS_DIR = os.getcwd()
