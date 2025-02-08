@@ -67,8 +67,10 @@ def process_stems(
 
     output_file = STEMGEN_OUTPUT_DIR / f"{input_path.stem}.stem.m4a" 
     if output_file.exists():
-        print(f"Deleting existing output file: {output_file}")
-        volume.remove_file(str(output_file.relative_to(STEMGEN_DIR)))
+        print(f"Using existing output file: {output_file}")
+        return {
+            "stem_file": str(output_file),
+        }
 
     download_model(BS_ROFORMER_MODEL_URL, BS_ROFORMER_MODEL_PATH)
 
