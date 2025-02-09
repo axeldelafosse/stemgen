@@ -28,7 +28,7 @@ Usage: stemgen -i [INPUT_PATH] -o [OUTPUT_PATH]
 
 Supported input file format: {SUPPORTED_FILES}
 """
-VERSION = "2.0.6"
+VERSION = "2.0.7"
 
 # Get the package root directory
 PACKAGE_DIR = Path(__file__).parent.absolute()
@@ -303,16 +303,16 @@ def create_stem():
 
     stem_args = [PYTHON_EXEC, "ni-stem/ni-stem", "create", "-s"]
     stem_args += [
-        f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}/drums.wav",
-        f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}/bass.wav",
-        f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}/other.wav",
-        f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}/vocals.wav",
+        f"{OUTPUT_PATH}/{WORKING_DIR}/{MODEL_NAME}/{FILE_NAME}/drums.wav",
+        f"{OUTPUT_PATH}/{WORKING_DIR}/{MODEL_NAME}/{FILE_NAME}/bass.wav",
+        f"{OUTPUT_PATH}/{WORKING_DIR}/{MODEL_NAME}/{FILE_NAME}/other.wav",
+        f"{OUTPUT_PATH}/{WORKING_DIR}/{MODEL_NAME}/{FILE_NAME}/vocals.wav",
     ]
     stem_args += [
         "-x",
-        f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}.wav",
+        f"{OUTPUT_PATH}/{WORKING_DIR}/{FILE_NAME}.wav",
         "-t",
-        f"{OUTPUT_PATH}/{FILE_NAME}/tags.json",
+        f"{OUTPUT_PATH}/{WORKING_DIR}/tags.json",
         "-m",
         "metadata.json",
         "-f",
