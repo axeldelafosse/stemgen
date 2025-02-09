@@ -2,6 +2,7 @@ import modal
 import subprocess
 import time
 import urllib.request
+import unicodedata
 from pathlib import Path
 
 volume = modal.Volume.from_name("stemgen", create_if_missing=True)
@@ -39,6 +40,12 @@ def download_model(url: str, dest_path: Path):
     else:
         print("Model already exists, skipping download.")
 
+def strip_accents(text):
+    text = unicodedata.normalize("NFKD", text)
+    text = text.encode("ascii", "ignore")
+    text = text.decode("utf-8")
+    return str(text)
+
 @app.function(
     gpu="A10G", # L40S
     timeout=600, # 10 minutes
@@ -66,7 +73,7 @@ def process_stems(
     if not input_path.exists():
         raise FileNotFoundError(f"Input file not found in volume: {input_path}")
 
-    output_file = STEMGEN_OUTPUT_DIR / f"{input_path.stem}.stem.m4a" 
+    output_file = STEMGEN_OUTPUT_DIR / f"{strip_accents(input_file_path.stem)}.stem.m4a" 
     if output_file.exists():
         print(f"Using existing output file: {output_file}")
         return {
