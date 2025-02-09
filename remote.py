@@ -17,7 +17,7 @@ BS_ROFORMER_MODEL_PATH = STEMGEN_MODELS_DIR / "model_bs_roformer_ep_17_sdr_9.656
 image = (
     modal.Image.debian_slim()
     .pip_install(
-        "stemgen==2.0.5",
+        "stemgen==2.0.6",
         "Lossless-BS-RoFormer",
         "mutagen",
         "torch"
@@ -160,9 +160,9 @@ def main(
             input_path.name
         )
         
-        print("\nStem file created successfully!")
+        print("\nStem file created successfully! Waiting 20 seconds before downloading...")
 
-        time.sleep(10)
+        time.sleep(20)
 
         remote_stem_file = Path(result['stem_file'])
         cmd = ["modal", "volume", "get", "stemgen", str(remote_stem_file.relative_to(STEMGEN_DIR))]

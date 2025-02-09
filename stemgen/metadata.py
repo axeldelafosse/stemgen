@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath("ni-stem/mutagen"))
 import mutagen
 
 
-def get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME):
+def get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, WORKING_DIR):
     print("Extracting cover...")
 
     if FILE_EXTENSION in (".wav", ".wave", ".aif", ".aiff"):
@@ -22,7 +22,7 @@ def get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME):
             cover = file["APIC:"].data
 
             # Save the cover art to a file
-            with open(f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg", "wb") as f:
+            with open(f"{OUTPUT_PATH}/{WORKING_DIR}/cover.jpg", "wb") as f:
                 f.write(cover)
                 print("Cover extracted from APIC tag.")
         else:
@@ -36,7 +36,7 @@ def get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME):
                 "-an",
                 "-vcodec",
                 "copy",
-                f"{OUTPUT_PATH}/{FILE_NAME}/cover.jpg",
+                f"{OUTPUT_PATH}/{WORKING_DIR}/cover.jpg",
                 "-y",
             ]
         )
@@ -45,7 +45,7 @@ def get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME):
     print("Done.")
 
 
-def get_metadata(FILE_PATH, OUTPUT_PATH, FILE_NAME):
+def get_metadata(FILE_PATH, OUTPUT_PATH, WORKING_DIR, FILE_NAME):
     print("Extracting metadata...")
 
     # Extract metadata with mutagen
@@ -272,14 +272,14 @@ def get_metadata(FILE_PATH, OUTPUT_PATH, FILE_NAME):
         TAGS["country"] = file["COUNTRY"][0]
 
     # `cover`
-    if os.path.exists(os.path.join(OUTPUT_PATH, FILE_NAME, "cover.jpg")):
-        TAGS["cover"] = f"{os.path.join(OUTPUT_PATH, FILE_NAME, 'cover.jpg')}"
+    if os.path.exists(os.path.join(OUTPUT_PATH, WORKING_DIR, "cover.jpg")):
+        TAGS["cover"] = f"{os.path.join(OUTPUT_PATH, WORKING_DIR, 'cover.jpg')}"
 
     print(TAGS)
 
     print("Creating tags.json...")
 
-    with open(os.path.join(OUTPUT_PATH, FILE_NAME, "tags.json"), "w") as f:
+    with open(os.path.join(OUTPUT_PATH, WORKING_DIR, "tags.json"), "w") as f:
         json.dump(TAGS, f)
 
     print("Done.")

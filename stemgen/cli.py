@@ -28,7 +28,7 @@ Usage: stemgen -i [INPUT_PATH] -o [OUTPUT_PATH]
 
 Supported input file format: {SUPPORTED_FILES}
 """
-VERSION = "2.0.5"
+VERSION = "2.0.6"
 
 # Get the package root directory
 PACKAGE_DIR = Path(__file__).parent.absolute()
@@ -124,7 +124,7 @@ def convert():
     global BIT_DEPTH
     global SAMPLE_RATE
 
-    converted_file_path = os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME + ".wav")
+    converted_file_path = os.path.join(OUTPUT_PATH, WORKING_DIR, FILE_NAME + ".wav")
 
     if BIT_DEPTH == 32:
         # Downconvert to 24-bit
@@ -136,7 +136,7 @@ def convert():
                     "--show-progress",
                     "-b",
                     "24",
-                    os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME + ".24bit.wav"),
+                    os.path.join(OUTPUT_PATH, WORKING_DIR, FILE_NAME + ".24bit.wav"),
                     "rate",
                     "-v",
                     "-a",
@@ -148,7 +148,7 @@ def convert():
             )
             os.remove(converted_file_path)
             os.rename(
-                os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME + ".24bit.wav"),
+                os.path.join(OUTPUT_PATH, WORKING_DIR, FILE_NAME + ".24bit.wav"),
                 converted_file_path,
             )
         else:
@@ -184,7 +184,7 @@ def convert():
                         "--show-progress",
                         "--no-dither",
                         os.path.join(
-                            OUTPUT_PATH, FILE_NAME, FILE_NAME + ".44100Hz.wav"
+                            OUTPUT_PATH, WORKING_DIR, FILE_NAME + ".44100Hz.wav"
                         ),
                         "rate",
                         "-v",
@@ -197,7 +197,7 @@ def convert():
                 )
                 os.remove(converted_file_path)
                 os.rename(
-                    os.path.join(OUTPUT_PATH, FILE_NAME, FILE_NAME + ".44100Hz.wav"),
+                    os.path.join(OUTPUT_PATH, WORKING_DIR, FILE_NAME + ".44100Hz.wav"),
                     converted_file_path,
                 )
             else:
@@ -246,11 +246,11 @@ def split_stems():
         subprocess.run(cmd)
 
         # Create full directory structure to match Demucs
-        os.makedirs(f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}", exist_ok=True)
+        os.makedirs(f"{OUTPUT_PATH}/{WORKING_DIR}/{MODEL_NAME}/{FILE_NAME}", exist_ok=True)
         stem_files = ["drums", "bass", "other", "vocals"]
         for stem in stem_files:
             src = f"{OUTPUT_PATH}/{FILE_NAME}_{stem}.wav"
-            dst = f"{OUTPUT_PATH}/{FILE_NAME}/{MODEL_NAME}/{FILE_NAME}/{stem}.wav"
+            dst = f"{OUTPUT_PATH}/{WORKING_DIR}/{MODEL_NAME}/{FILE_NAME}/{stem}.wav"
             if os.path.exists(src):
                 shutil.move(src, dst)
     else:
@@ -368,8 +368,8 @@ def setup():
     setup_file()
     get_bit_depth()
     get_sample_rate()
-    get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, FILE_NAME)
-    get_metadata(FILE_PATH, OUTPUT_PATH, FILE_NAME)
+    get_cover(FILE_EXTENSION, FILE_PATH, OUTPUT_PATH, WORKING_DIR)
+    get_metadata(FILE_PATH, OUTPUT_PATH, WORKING_DIR, FILE_NAME)
     convert()
 
     print("Ready!")
@@ -463,18 +463,19 @@ def strip_accents(text):
 
 
 def setup_file():
-    global FILE_NAME, INPUT_DIR, FILE_PATH
+    global FILE_NAME, WORKING_DIR, INPUT_DIR, FILE_PATH
     FILE_NAME = strip_accents(BASE_PATH.removesuffix(FILE_EXTENSION))
+    WORKING_DIR = FILE_NAME.replace("[", "_").replace("]", "_")
     INPUT_DIR = os.path.join(PROCESS_DIR, os.path.dirname(INPUT_PATH))
 
-    if os.path.exists(f"{OUTPUT_PATH}/{FILE_NAME}"):
+    if os.path.exists(f"{OUTPUT_PATH}/{WORKING_DIR}"):
         print("Working dir already exists.")
     else:
-        os.mkdir(f"{OUTPUT_PATH}/{FILE_NAME}")
+        os.mkdir(f"{OUTPUT_PATH}/{WORKING_DIR}")
         print("Working dir created.")
 
-    shutil.copy(INPUT_PATH, f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}{FILE_EXTENSION}")
-    FILE_PATH = f"{OUTPUT_PATH}/{FILE_NAME}/{FILE_NAME}{FILE_EXTENSION}"
+    shutil.copy(INPUT_PATH, f"{OUTPUT_PATH}/{WORKING_DIR}/{FILE_NAME}{FILE_EXTENSION}")
+    FILE_PATH = f"{OUTPUT_PATH}/{WORKING_DIR}/{FILE_NAME}{FILE_EXTENSION}"
     print("Done.")
 
 
@@ -487,17 +488,17 @@ def clean_dir():
         if file.endswith(".m4a"):
             os.remove(os.path.join(INPUT_DIR, file))
 
-    if os.path.isfile(os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME}.stem.m4a")):
+    if os.path.isfile(os.path.join(OUTPUT_PATH, WORKING_DIR, f"{FILE_NAME}.stem.m4a")):
         os.rename(
-            os.path.join(OUTPUT_PATH, FILE_NAME, f"{FILE_NAME}.stem.m4a"),
+            os.path.join(OUTPUT_PATH, WORKING_DIR, f"{FILE_NAME}.stem.m4a"),
             os.path.join(OUTPUT_PATH, f"{FILE_NAME}.stem.m4a"),
         )
 
     try:
-        shutil.rmtree(os.path.join(OUTPUT_PATH, FILE_NAME))
+        shutil.rmtree(os.path.join(OUTPUT_PATH, WORKING_DIR))
     except PermissionError:
         print(
-            f"Permission error encountered. Directory {os.path.join(OUTPUT_PATH, FILE_NAME)} might still be in use."
+            f"Permission error encountered. Directory {os.path.join(OUTPUT_PATH, WORKING_DIR)} might still be in use."
         )
 
     print("Done.")
