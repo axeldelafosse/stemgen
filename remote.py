@@ -73,7 +73,7 @@ def process_stems(
     if not input_path.exists():
         raise FileNotFoundError(f"Input file not found in volume: {input_path}")
 
-    output_file = STEMGEN_OUTPUT_DIR / f"{strip_accents(input_file_path.stem)}.stem.m4a" 
+    output_file = STEMGEN_OUTPUT_DIR / strip_accents(f"{input_path.stem}.stem.m4a") 
     if output_file.exists():
         print(f"Using existing output file: {output_file}")
         return {
