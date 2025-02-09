@@ -48,7 +48,7 @@ def strip_accents(text):
 
 @app.function(
     gpu="A10G", # L40S
-    timeout=600, # 10 minutes
+    timeout=900, # 15 minutes
     volumes={
         STEMGEN_DIR: volume
     },
