@@ -115,22 +115,71 @@ def get_codec(extension, bit_depth):
 def get_bit_depth(file_path):
     print("Extracting bit depth...")
 
-    bit_depth = int(
-        subprocess.check_output(
-            [
-                "ffprobe",
-                "-v",
-                "error",
-                "-select_streams",
-                "a",
-                "-show_entries",
-                "stream=bits_per_raw_sample",
-                "-of",
-                "default=noprint_wrappers=1:nokey=1",
-                file_path,
-            ]
-        ).split()[0]
-    )
+    def _probe_int_field(field_name):
+        try:
+            output = subprocess.check_output(
+                [
+                    "ffprobe",
+                    "-v",
+                    "error",
+                    "-select_streams",
+                    "a",
+                    "-show_entries",
+                    f"stream={field_name}",
+                    "-of",
+                    "default=noprint_wrappers=1:nokey=1",
+                    file_path,
+                ]
+            )
+            tokens = output.split()
+            for tok in tokens:
+                try:
+                    value = int(tok)
+                    if value > 0:
+                        return value
+                except ValueError:
+                    # skip e.g. b'N/A'
+                    continue
+        except subprocess.CalledProcessError:
+            pass
+        return None
+
+    bit_depth = _probe_int_field("bits_per_raw_sample")
+    if bit_depth is None:
+        bit_depth = _probe_int_field("bits_per_sample")
+
+    # Fallback: derive from sample format if needed
+    if bit_depth is None:
+        try:
+            output = subprocess.check_output(
+                [
+                    "ffprobe",
+                    "-v",
+                    "error",
+                    "-select_streams",
+                    "a",
+                    "-show_entries",
+                    "stream=sample_fmt",
+                    "-of",
+                    "default=noprint_wrappers=1:nokey=1",
+                    file_path,
+                ]
+            )
+            for tok in output.split():
+                fmt = tok.decode("utf-8", errors="ignore")
+                if "s16" in fmt:
+                    bit_depth = 16
+                    break
+                if "s32" in fmt or "flt" in fmt or "dbl" in fmt:
+                    # treat 32-bit ints/floats as 32-bit depth for output purposes
+                    bit_depth = 32
+                    break
+        except subprocess.CalledProcessError:
+            pass
+
+    # Final fallback if everything else failed
+    if bit_depth is None:
+        bit_depth = 16
 
     print(f"bits_per_sample={bit_depth}")
     print("Done.")
