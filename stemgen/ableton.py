@@ -14,9 +14,11 @@
 # Usage:
 # Open Ableton Live
 # Open the project you want to export
-# Check your export settings and make sure that the export folder is set to "stemgen/input"
+# Check your export settings:
+# Make sure that the export folder is set to your Desktop folder
+# Make sure that the export format is set to AIFF
 # Solo the tracks you want to export as stems
-# Run `python3 ableton.py`
+# Run `ableton`
 # Enter the name of the file
 # Don't touch your computer until it's done
 # Enjoy your stems!
@@ -32,6 +34,16 @@ import time
 import logging
 from stemgen.metadata import create_metadata_json, ableton_color_index_to_hex
 from shutil import which, move
+import re
+
+# Optional imports for accessibility APIs
+if platform.system() == "Windows":
+    try:
+        from pywinauto import Application as _PyWinApp
+    except Exception:
+        _PyWinApp = None
+else:
+    _PyWinApp = None
 
 # Settings
 NAME = "track"
@@ -59,12 +71,75 @@ def say(text):
     return
 
 
+EXPORT_REGEX = re.compile(r"Export\s+Audio(\.|…|/Video)*", re.IGNORECASE)
+
+
+def _is_export_in_progress() -> bool:
+    """Detects if Ableton's export dialog/sheet is currently visible."""
+    if platform.system() == "Windows" and _PyWinApp is not None:
+        try:
+            return _is_export_dialog_open_windows()
+        except Exception:
+            pass
+
+    try:
+        location = pyautogui.locateOnScreen(
+            os.path.join(INSTALL_DIR, "screenshots", OS, "export.png"),
+            confidence=0.9,
+            grayscale=True,
+        )
+        return location is not None
+    except Exception:
+        return False
+
+ 
+
+
+def _is_export_dialog_open_windows() -> bool:
+    if _PyWinApp is None:
+        return False
+    try:
+        app = _PyWinApp(backend="uia").connect(title_re=".*Ableton.*", timeout=2.0)
+    except Exception:
+        return False
+    try:
+        main = app.window(title_re=".*Ableton.*")
+    except Exception:
+        return False
+
+    try:
+        for ctrl in main.descendants(control_type="Text"):
+            name = ""
+            try:
+                name = ctrl.window_text()
+            except Exception:
+                try:
+                    name = getattr(ctrl.element_info, "name", "") or ""
+                except Exception:
+                    name = ""
+            if name and EXPORT_REGEX.search(name):
+                return True
+    except Exception:
+        pass
+
+    try:
+        for dlg in app.windows():
+            try:
+                if EXPORT_REGEX.search(dlg.window_text()):
+                    return True
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return False
+
+
 # Switch to Ableton Live
 def switch_to_ableton():
     print("Looking for Ableton Live...")
     if OS == "windows":
         ableton = pyautogui.getWindowsWithTitle("Ableton Live")[0]
-        if ableton != None:
+        if ableton is not None:
             print("Found it!")
             ableton.activate()
             ableton.maximize()
@@ -79,7 +154,7 @@ def switch_to_ableton():
         grayscale=True,
     )
     print("Found it!")
-    if IS_RETINA == True:
+    if IS_RETINA:
         x = x / 2
         y = y / 2
     pyautogui.moveTo(x, y)
@@ -107,7 +182,7 @@ def export(track, position):
         pyautogui.hotkey("command", "shift", "r")
     pyautogui.press("enter")
     time.sleep(1)
-    pyautogui.typewrite(NAME + "." + str(position) + ".aif")
+    pyautogui.typewrite(NAME + "." + str(position))
     pyautogui.press("enter")
 
     print("Exporting: " + NAME + "." + str(position) + ".aif")
@@ -116,17 +191,14 @@ def export(track, position):
     time.sleep(1)
     while True:
         try:
-            location = pyautogui.locateOnScreen(
-                os.path.join(INSTALL_DIR, "screenshots", OS, "export.png"),
-                confidence=0.9,
-                grayscale=True,
-            )
-            if location != None:
+            exporting = _is_export_in_progress()
+            if exporting:
                 print("Exporting...")
             else:
                 print("Exported: " + NAME + "." + str(position) + ".aif")
                 break
-        except:
+        except Exception:
+            # If detection fails for any reason, assume export is done to avoid endless loop
             print("Exported: " + NAME + "." + str(position) + ".aif")
             break
 
@@ -197,11 +269,11 @@ def main():
 
     print("Found " + str(len(soloed_tracks)) + " solo-ed tracks.")
 
-    # Delete old files using the same file name in `/tmp` folder
-    tmp_path = "/tmp" if OS != "windows" else os.path.join(os.getenv("TEMP"))
-    for file in os.listdir(tmp_path):
+    # Delete old files using the same file name on Desktop
+    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+    for file in os.listdir(desktop_path):
         if file.startswith(NAME):
-            os.remove(os.path.join(tmp_path, file))
+            os.remove(os.path.join(desktop_path, file))
 
     # Unsolo the tracks
     for track in set.tracks:
@@ -211,9 +283,12 @@ def main():
     # Export master
     export(soloed_tracks, 0)
 
-    # Check if master was exported in `/tmp` folder
-    if not os.path.exists(os.path.join(tmp_path, NAME + ".0.aif")):
-        print("You need to set `/tmp` as the output folder.")
+    # Check if master was exported on Desktop
+    if not os.path.exists(os.path.join(desktop_path, NAME + ".0.aif")):
+        if os.path.exists(os.path.join(desktop_path, NAME + ".0.wav")):
+            print("You need to export as AIFF instead of WAV.")
+        else:
+            print("You need to set your Desktop as the output folder.")
         say("Oops")
         exit()
 
@@ -228,7 +303,7 @@ def main():
         cmd = pyautogui.getWindowsWithTitle(
             "Command Prompt"
         ) or pyautogui.getWindowsWithTitle("Windows PowerShell")
-        if cmd[0] != None:
+        if cmd[0] is not None:
             cmd[0].activate()
     else:
         pyautogui.keyDown("command")
@@ -252,9 +327,9 @@ def main():
                 PYTHON_EXEC,
                 os.path.join(INSTALL_DIR, "stem.py"),
                 "-i",
-                os.path.join(tmp_path, NAME + ".0.aif"),
+                os.path.join(desktop_path, NAME + ".0.aif"),
                 "-o",
-                os.path.join(tmp_path, "output"),
+                os.path.join(desktop_path, "output"),
                 "-f",
                 "aac",
             ]
@@ -265,17 +340,16 @@ def main():
                 PYTHON_EXEC,
                 os.path.join(INSTALL_DIR, "stem.py"),
                 "-i",
-                os.path.join(tmp_path, NAME + ".0.aif"),
+                os.path.join(desktop_path, NAME + ".0.aif"),
                 "-o",
-                os.path.join(tmp_path, "output"),
+                os.path.join(desktop_path, "output"),
             ]
         )
 
     # Move the stems to the Desktop folder
-    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-    for file in os.listdir(os.path.join(tmp_path, "output")):
+    for file in os.listdir(os.path.join(desktop_path, "output")):
         if file.startswith(NAME):
-            move(os.path.join(tmp_path, "output", file), os.path.join(desktop_path, file))
+            move(os.path.join(desktop_path, "output", file), os.path.join(desktop_path, file))
 
     print("Done! Enjoy :)")
     say("Done")
