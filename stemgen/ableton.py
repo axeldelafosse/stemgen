@@ -99,7 +99,7 @@ def _is_export_dialog_open_windows() -> bool:
     if _PyWinApp is None:
         return False
     try:
-        app = _PyWinApp(backend="uia").connect(title_re=".*Ableton.*", timeout=2.0)
+        app = _PyWinApp(backend="win32").connect(title_re=".*Ableton.*", timeout=2.0)
     except Exception:
         return False
     try:
