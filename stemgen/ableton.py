@@ -72,6 +72,7 @@ def say(text):
 
 
 EXPORT_REGEX = re.compile(r"Export\s+Audio(\.|…|/Video)*", re.IGNORECASE)
+SAVE_AUDIO_REGEX = re.compile(r"^Save\s+Audio", re.IGNORECASE)
 
 
 def _is_export_in_progress() -> bool:
@@ -98,39 +99,130 @@ def _is_export_in_progress() -> bool:
 def _is_export_dialog_open_windows() -> bool:
     if _PyWinApp is None:
         return False
-    try:
-        app = _PyWinApp(backend="win32").connect(title_re=".*Ableton.*", timeout=2.0)
-    except Exception:
-        return False
-    try:
-        main = app.window(title_re=".*Ableton.*")
-    except Exception:
-        return False
+    # Try multiple backends for better compatibility across Windows versions
+    for backend in ("win32", "uia"):
+        try:
+            app = _PyWinApp(backend=backend).connect(title_re=".*Ableton.*", timeout=2.0)
+        except Exception:
+            continue
+        try:
+            main = app.window(title_re=".*Ableton.*")
+        except Exception:
+            main = None
 
-    try:
-        for ctrl in main.descendants(control_type="Text"):
-            name = ""
+        # Scan for text controls indicating the export dialog/sheet
+        if main is not None:
             try:
-                name = ctrl.window_text()
-            except Exception:
                 try:
-                    name = getattr(ctrl.element_info, "name", "") or ""
+                    ctrls = main.descendants(control_type="Text")
                 except Exception:
+                    # Some backends may not support control_type filtering
+                    ctrls = main.descendants()
+                for ctrl in ctrls:
                     name = ""
-            if name and EXPORT_REGEX.search(name):
-                return True
-    except Exception:
-        pass
-
-    try:
-        for dlg in app.windows():
-            try:
-                if EXPORT_REGEX.search(dlg.window_text()):
-                    return True
+                    try:
+                        name = ctrl.window_text()
+                    except Exception:
+                        try:
+                            name = getattr(ctrl.element_info, "name", "") or ""
+                        except Exception:
+                            name = ""
+                    if name and (EXPORT_REGEX.search(name) or SAVE_AUDIO_REGEX.search(name)):
+                        return True
             except Exception:
-                continue
+                pass
+
+        # Also check all app windows' titles as a fallback heuristic
+        try:
+            for dlg in app.windows():
+                try:
+                    title = dlg.window_text()
+                    if EXPORT_REGEX.search(title) or SAVE_AUDIO_REGEX.search(title):
+                        return True
+                except Exception:
+                    continue
+        except Exception:
+            pass
+    return False
+
+
+# Try to activate an existing console window on Windows in a resilient way
+def _activate_any_console_window_windows() -> bool:
+    if platform.system() != "Windows":
+        return False
+    # Prefer OS APIs via pywinauto when available
+    try:
+        from pywinauto import Desktop as _PwDesktop  # type: ignore
     except Exception:
-        pass
+        _PwDesktop = None
+
+    # 1) Try by well-known window classes (more robust than titles)
+    # - "ConsoleWindowClass" covers classic cmd and Windows PowerShell
+    # - "CASCADIA_HOSTING_WINDOW_CLASS" covers Windows Terminal
+    if _PwDesktop is not None:
+        for backend in ("win32", "uia"):
+            try:
+                desktop = _PwDesktop(backend=backend)
+                candidates = []
+                try:
+                    candidates.extend(
+                        desktop.windows(class_name="ConsoleWindowClass", visible_only=True)
+                    )
+                except Exception:
+                    pass
+                try:
+                    candidates.extend(
+                        desktop.windows(
+                            class_name="CASCADIA_HOSTING_WINDOW_CLASS", visible_only=True
+                        )
+                    )
+                except Exception:
+                    pass
+                # As a secondary heuristic, match titles if class search returned nothing
+                if not candidates:
+                    try:
+                        title_keywords = ("Command Prompt", "PowerShell", "Windows Terminal", "pwsh")
+                        for w in desktop.windows(visible_only=True):
+                            try:
+                                title = w.window_text() or ""
+                            except Exception:
+                                title = ""
+                            if any(k.lower() in title.lower() for k in title_keywords):
+                                candidates.append(w)
+                    except Exception:
+                        pass
+                if candidates:
+                    try:
+                        # Try the most recently active first
+                        target = candidates[0]
+                        target.set_focus()
+                        try:
+                            target.maximize()
+                        except Exception:
+                            pass
+                        return True
+                    except Exception:
+                        # Try next backend or fallback
+                        pass
+            except Exception:
+                # Try next backend
+                pass
+
+    # 2) Fallback to title-based matching via pyautogui
+    try:
+        cmd = (
+            pyautogui.getWindowsWithTitle("Command Prompt")
+            or pyautogui.getWindowsWithTitle("Windows PowerShell")
+            or pyautogui.getWindowsWithTitle("PowerShell 7")
+        )
+        if cmd:
+            try:
+                cmd[0].activate()
+                return True
+            except Exception:
+                return False
+    except Exception:
+        return False
     return False
 
 
@@ -188,7 +280,7 @@ def export(track, position):
     print("Exporting: " + NAME + "." + str(position) + ".aif")
 
     # Wait for the export to finish
-    time.sleep(1)
+    time.sleep(5)
     while True:
         try:
             exporting = _is_export_in_progress()
@@ -197,9 +289,9 @@ def export(track, position):
             else:
                 print("Exported: " + NAME + "." + str(position) + ".aif")
                 break
-        except Exception:
-            # If detection fails for any reason, assume export is done to avoid endless loop
-            print("Exported: " + NAME + "." + str(position) + ".aif")
+        except Exception as e:
+            print("Export failed!")
+            print(e)
             break
 
     # Unsolo the track (if not exporting master)
@@ -300,11 +392,7 @@ def main():
 
     # Switch to Terminal
     if OS == "windows":
-        cmd = pyautogui.getWindowsWithTitle(
-            "Command Prompt"
-        ) or pyautogui.getWindowsWithTitle("Windows PowerShell")
-        if cmd[0] is not None:
-            cmd[0].activate()
+        _activate_any_console_window_windows()
     else:
         pyautogui.keyDown("command")
         pyautogui.press("tab")
