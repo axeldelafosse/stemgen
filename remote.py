@@ -17,7 +17,7 @@ BS_ROFORMER_MODEL_PATH = STEMGEN_MODELS_DIR / "model_bs_roformer_ep_17_sdr_9.656
 image = (
     modal.Image.debian_slim()
     .pip_install(
-        "stemgen==2.0.10",
+        "stemgen==2.0.11",
         "Lossless-BS-RoFormer",
         "mutagen",
         "torch"
