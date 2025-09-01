@@ -36,14 +36,6 @@ from stemgen.metadata import create_metadata_json, ableton_color_index_to_hex
 from shutil import which, move
 import re
 
-# Optional imports for accessibility APIs
-if platform.system() == "Windows":
-    try:
-        from pywinauto import Application as _PyWinApp
-    except Exception:
-        _PyWinApp = None
-else:
-    _PyWinApp = None
 
 # Settings
 NAME = "track"
@@ -77,9 +69,32 @@ SAVE_AUDIO_REGEX = re.compile(r"^Save\s+Audio", re.IGNORECASE)
 
 def _is_export_in_progress() -> bool:
     """Detects if Ableton's export dialog/sheet is currently visible."""
-    if platform.system() == "Windows" and _PyWinApp is not None:
+    if platform.system() == "Windows":
         try:
-            return _is_export_dialog_open_windows()
+            from pywinauto import Desktop as _PwDesktop
+        except Exception:
+            _PwDesktop = None
+
+        if _PwDesktop is not None:
+            for backend in ("win32", "uia"):
+                try:
+                    desktop = _PwDesktop(backend=backend)
+                    for w in desktop.windows(visible_only=True):
+                        try:
+                            title = w.window_text() or ""
+                        except Exception:
+                            title = ""
+                        if EXPORT_REGEX.search(title) or SAVE_AUDIO_REGEX.search(title):
+                            return True
+                except Exception:
+                    pass
+
+        try:
+            if (
+                pyautogui.getWindowsWithTitle("Export Audio")
+                or pyautogui.getWindowsWithTitle("Save Audio")
+            ):
+                return True
         except Exception:
             pass
 
@@ -93,58 +108,6 @@ def _is_export_in_progress() -> bool:
     except Exception:
         return False
 
- 
-
-
-def _is_export_dialog_open_windows() -> bool:
-    if _PyWinApp is None:
-        return False
-    # Try multiple backends for better compatibility across Windows versions
-    for backend in ("win32", "uia"):
-        try:
-            app = _PyWinApp(backend=backend).connect(title_re=".*Ableton.*", timeout=2.0)
-        except Exception:
-            continue
-        try:
-            main = app.window(title_re=".*Ableton.*")
-        except Exception:
-            main = None
-
-        # Scan for text controls indicating the export dialog/sheet
-        if main is not None:
-            try:
-                try:
-                    ctrls = main.descendants(control_type="Text")
-                except Exception:
-                    # Some backends may not support control_type filtering
-                    ctrls = main.descendants()
-                for ctrl in ctrls:
-                    name = ""
-                    try:
-                        name = ctrl.window_text()
-                    except Exception:
-                        try:
-                            name = getattr(ctrl.element_info, "name", "") or ""
-                        except Exception:
-                            name = ""
-                    if name and (EXPORT_REGEX.search(name) or SAVE_AUDIO_REGEX.search(name)):
-                        return True
-            except Exception:
-                pass
-
-        # Also check all app windows' titles as a fallback heuristic
-        try:
-            for dlg in app.windows():
-                try:
-                    title = dlg.window_text()
-                    if EXPORT_REGEX.search(title) or SAVE_AUDIO_REGEX.search(title):
-                        return True
-                except Exception:
-                    continue
-        except Exception:
-            pass
-    return False
-
 
 # Try to activate an existing console window on Windows in a resilient way
 def _activate_any_console_window_windows() -> bool:
@@ -152,7 +115,7 @@ def _activate_any_console_window_windows() -> bool:
         return False
     # Prefer OS APIs via pywinauto when available
     try:
-        from pywinauto import Desktop as _PwDesktop  # type: ignore
+        from pywinauto import Desktop as _PwDesktop
     except Exception:
         _PwDesktop = None
 
