@@ -7,6 +7,7 @@ import sys
 import subprocess
 from pathlib import Path
 import unicodedata
+import re
 import torch
 from stemgen.metadata import get_cover, get_metadata
 
@@ -456,10 +457,30 @@ def get_sample_rate():
 
 
 def strip_accents(text):
-    text = unicodedata.normalize("NFKD", text)
-    text = text.encode("ascii", "ignore")
-    text = text.decode("utf-8")
-    return str(text)
+    """
+    Preserve Unicode characters, remove control chars,
+    and replace only filesystem-reserved characters.
+    Works cross-platform and keeps the original text intact.
+    """
+    # Normalize to NFC so visually-identical composed forms match macOS behavior
+    text = unicodedata.normalize("NFC", text)
+    # Remove control characters (including DEL)
+    text = "".join(ch for ch in text if ch >= " " and ch != "\x7f")
+    # Replace characters reserved by common filesystems: <>:"/\\|?*
+    text = re.sub(r'[<>:"/\\\\|?*]', "_", text)
+    # Collapse whitespace and trim
+    text = re.sub(r"\s+", " ", text).strip()
+    # Windows: strip trailing spaces or periods
+    text = re.sub(r"[\. ]+$", "", text)
+    # Windows reserved device texts -> prefix/suffix with underscore
+    base, ext = os.path.splitext(text)
+    if base.upper() in {
+        "CON","PRN","AUX","NUL",
+        "COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9",
+        "LPT1","LPT2","LPT3","LPT4","LPT5","LPT6","LPT7","LPT8","LPT9",
+    }:
+        base = f"_{base}_"
+    return base + ext
 
 
 def setup_file():
