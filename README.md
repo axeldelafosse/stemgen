@@ -48,14 +48,58 @@ Stems are fun but nobody's releasing them. Stemgen is a way to create your own s
 - ffmpeg https://www.ffmpeg.org
 - sox https://sox.sourceforge.net
 - mutagen https://mutagen.readthedocs.io
+- ExifTool https://exiftool.org/
+- PyTorch https://pytorch.org/get-started/locally/
 
 ## Usage
 
-You can use `stemgen.py` to generate stems:
+You can use `stemgen` (or `python stemgen.py`) to generate stems:
 
-- `$ python3 stemgen.py track.wav`
-- Have fun! Your new `.stem.m4a` file is in `output` dir
-- Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
+```text
+stemgen [-h] [-i INPUT_PATH] [-o OUTPUT_PATH] [-f FORMAT] [-d DEVICE]
+        [-n MODEL_NAME] [-m MODEL_PATH] [-s MODEL_SHIFTS] [-v]
+        [INPUT_PATH]
+```
+
+| Argument | Short | Default | Description |
+| --- | --- | --- | --- |
+| `INPUT_PATH` | | | Path to the input file or folder (positional or via `-i`) |
+| `--input INPUT_PATH` | `-i` | | Path to the input file or folder |
+| `--output OUTPUT_PATH` | `-o` | `output` | Path to the output folder |
+| `--format FORMAT` | `-f` | `aac` | Output encoding: `aac` or `alac` |
+| `--device DEVICE` | `-d` | auto-detected | Processing device: `cpu`, `cuda`, or `mps` |
+| `--model_name MODEL_NAME` | `-n` | `bs_roformer` | Separation model to use (e.g. `bs_roformer`, `htdemucs`) |
+| `--model_path MODEL_PATH` | `-m` | | Path to a custom model checkpoint |
+| `--model_shifts MODEL_SHIFTS` | `-s` | `1` | Number of random shifts for Demucs (higher = better quality, slower) |
+| `--version` | `-v` | | Show version and exit |
+
+**Examples:**
+
+```sh
+# Basic usage (auto-detects GPU if available)
+stemgen track.wav
+
+# Specify input and output explicitly
+stemgen -i track.flac -o /path/to/output
+
+# Use ALAC (lossless) encoding Note that alac is not supported in Traktor on Windows
+stemgen -i track.wav -f alac
+
+# Force CPU processing
+stemgen -i track.wav -d cpu
+
+# Use Demucs instead of BS-RoFormer
+stemgen -i track.wav -n htdemucs
+
+# Use a custom model checkpoint with multiple shifts
+stemgen -i track.wav -m /path/to/model.ckpt -s 4
+
+# Batch process an entire folder (mirrors subfolder structure)
+stemgen -i /path/to/music/folder -o /path/to/output
+```
+
+- Have fun! Your new `.stem.m4a` file is in the output dir
+- Supported input formats: `.wav` `.wave` `.aif` `.aiff` `.flac` `.m4a` `.mp3`
 
 ## Bring your own stems
 
@@ -63,45 +107,48 @@ You can use `stemgen.py` to generate stems:
 
 You can use `stem.py` to create stems:
 
-- `$ python3 stem.py -i track/track.0.wav`
+- `$ python stem.py -i track/track.0.wav`
 - You need to follow this naming convention: `[TRACK_NAME].[TRACK_NUMBER].[FILE_EXTENSION]`
 - `TRACK_NAME` should be identical for all files
 - Please use `0` as the `TRACK_NUMBER` for the master track. Example:
   `'track.0.wav'` for the master file then `'track.1.wav'` for the first stem, etc...
 - Have fun! Your new `.stem.m4a` file is in `output` dir
-- Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac`
+- Supported input file format are `.wav` `.wave` `.aif` `.aiff` `.flac` `.m4a` `.mp3`
 
 ### With Ableton Live
 
 You can use Ableton Live to create stems:
 
-- `$ python3 ableton.py`
+- `$ python ableton.py`
 
 ## Quick install on macOS
 
-- `python3 -m pip install -U demucs`
-- `python3 -m pip install mutagen`
+- `python -m pip install -U demucs`
+- `python -m pip install mutagen`
 - `brew install coreutils ffmpeg sox`
 
 ## Quick install on Linux
 
-- `python3 -m pip install -U demucs`
-- `python3 -m pip install mutagen`
+- `python -m pip install -U demucs`
+- `python -m pip install mutagen`
 - `sudo apt install ffmpeg sox gpac` (or install ffmpeg with https://github.com/markus-perl/ffmpeg-build-script if you plan to encode in AAC)
 
-## Long install on Windows
+## Quick install on Windows
 
-- `python3 -m pip install -U demucs`
-- `python3 -m pip install mutagen`
-- You might need Microsoft C++ Build Tools https://visualstudio.microsoft.com/visual-cpp-build-tools
-  for Demucs
-- Download ffmpeg from https://www.ffmpeg.org/download.html
-- Download sox from https://sourceforge.net/projects/sox/files/sox
-- Add ffmpeg and sox to your PATH
+- `python -m pip install -U demucs`
+- `python -m pip install mutagen`
+- `winget install Nvidia.CUDA`
+- `winget install ChrisBagwell.SoX`
+- `winget install Gyan.FFmpeg`
+- `winget install OliverBetz.ExifToolwinget`
+- `pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu132`
+- You might need Microsoft C++ Build Tools for Demucs `winget install Microsoft.VisualStudio.BuildTools`
 
 ### qaac
 
-If you plan to encode in AAC, you should install qaac. Here is a quick guide:
+AAC is supported by FFMPEG out of the box, so this step is optional.
+
+If you plan to encode in AAC using Apple Audio Toolbox, you should install qaac. Here is a quick guide:
 
 - Download qaac from https://github.com/nu774/qaac/releases
 - Move the content of `x64` to `C:\Program Files\qaac` (or `x86` depending on your system)
