@@ -272,7 +272,7 @@ def split_stems():
                     DEVICE,
                     FILE_PATH,
                     "-o",
-                    f"{OUTPUT_PATH}/{FILE_NAME}",
+                    f"{OUTPUT_PATH}/{WORKING_DIR}",
                 ]
             )
         else:
@@ -290,7 +290,7 @@ def split_stems():
                     DEVICE,
                     FILE_PATH,
                     "-o",
-                    f"{OUTPUT_PATH}/{FILE_NAME}",
+                    f"{OUTPUT_PATH}/{WORKING_DIR}",
                 ]
             )
 
