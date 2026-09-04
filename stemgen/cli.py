@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 import subprocess
+import time
 from pathlib import Path
 import unicodedata
 import torch
@@ -18,8 +19,8 @@ LOGO = r"""
 
 """
 
-SUPPORTED_FILES = [".wave", ".wav", ".aiff", ".aif", ".flac"]
-REQUIRED_PACKAGES = ["ffmpeg", "sox"]
+SUPPORTED_FILES = [".wave", ".wav", ".aiff", ".aif", ".flac", ".m4a", ".mp3"]
+REQUIRED_PACKAGES = ["ffmpeg", "sox", "exiftool"]
 
 USAGE = f"""{LOGO}
 Stemgen is a Stem file generator. Convert any track into a stem and have fun with Traktor.
@@ -54,7 +55,7 @@ parser.add_argument(
     ),
     help="the path to the output folder",
 )
-parser.add_argument("-f", "--format", dest="FORMAT", default="alac", help="aac or alac")
+parser.add_argument("-f", "--format", dest="FORMAT", default="aac", help="aac or alac")
 parser.add_argument("-d", "--device", dest="DEVICE", help="cpu or cuda or mps")
 parser.add_argument("-v", "--version", action="version", version=VERSION)
 parser.add_argument(
@@ -175,6 +176,22 @@ def convert():
             FILE_EXTENSION == ".wav" or FILE_EXTENSION == ".wave"
         ) and SAMPLE_RATE == 44100:
             print("No conversion needed.")
+        elif FILE_EXTENSION == ".m4a":
+            # sox does not support m4a; use ffmpeg instead
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-i",
+                    FILE_PATH,
+                    "-ar",
+                    "44100",
+                    "-c:a",
+                    "pcm_s24le",
+                    "-y",
+                    converted_file_path,
+                ],
+                check=True,
+            )
         else:
             if FILE_PATH == converted_file_path:
                 subprocess.run(
@@ -375,12 +392,34 @@ def setup():
     print("Ready!")
 
 
+def copy_exif():
+    target = os.path.join(OUTPUT_PATH, f"{FILE_NAME}.stem.m4a")
+    if not os.path.isfile(target):
+        print("Skipping EXIF copy: output stem file not found.")
+        return
+
+    print("Copying EXIF metadata from source to stem file...")
+    subprocess.run(
+        [
+            "exiftool",
+            "-TagsFromFile",
+            INPUT_PATH,
+            "-overwrite_original",
+            "-all:all",
+            target,
+        ],
+        check=True,
+    )
+    print("Done.")
+
+
 def run():
     print(f"Creating a Stem file for {FILE_NAME}...")
 
     split_stems()
     create_stem()
     clean_dir()
+    copy_exif()
 
     print("Success! Have fun :)")
 
@@ -484,10 +523,6 @@ def clean_dir():
 
     os.chdir(OUTPUT_PATH)
 
-    for file in os.listdir(INPUT_DIR):
-        if file.endswith(".m4a"):
-            os.remove(os.path.join(INPUT_DIR, file))
-
     if os.path.isfile(os.path.join(OUTPUT_PATH, WORKING_DIR, f"{FILE_NAME}.stem.m4a")):
         os.rename(
             os.path.join(OUTPUT_PATH, WORKING_DIR, f"{FILE_NAME}.stem.m4a"),
@@ -504,9 +539,69 @@ def clean_dir():
     print("Done.")
 
 
-def main():
+def process_file(input_file: str, output_dir: str):
+    """Set up globals for a single file and process it."""
+    global INPUT_PATH, OUTPUT_PATH
+    INPUT_PATH = input_file
+    OUTPUT_PATH = output_dir
+    os.makedirs(OUTPUT_PATH, exist_ok=True)
     setup()
     run()
+
+
+def main():
+    input_path = INPUT_PATH  # snapshot before any mutation
+
+    if os.path.isdir(input_path):
+        # Folder mode: walk recursively and process every supported file,
+        # mirroring the subfolder structure inside OUTPUT_PATH.
+        input_root = os.path.abspath(input_path)
+        output_root = OUTPUT_PATH
+
+        # Collect all files first so we can show progress and time estimates.
+        files_to_process = []
+        for dirpath, _dirnames, filenames in os.walk(input_root):
+            for filename in sorted(filenames):
+                if filename.endswith(".stem.m4a"):
+                    continue
+                if os.path.splitext(filename)[1].lower() in SUPPORTED_FILES:
+                    rel_dir = os.path.relpath(dirpath, input_root)
+                    files_to_process.append((
+                        os.path.join(dirpath, filename),
+                        os.path.normpath(os.path.join(output_root, rel_dir)),
+                    ))
+
+        if not files_to_process:
+            print(f"No supported audio files found in {input_path}")
+            sys.exit(1)
+
+        total = len(files_to_process)
+        print(f"Found {total} file(s) to process.")
+        batch_start = time.monotonic()
+
+        for index, (file_abs, out_dir) in enumerate(files_to_process, start=1):
+            elapsed = time.monotonic() - batch_start
+            if index > 1:
+                avg = elapsed / (index - 1)
+                eta = avg * (total - index + 1)
+                eta_str = time.strftime("%H:%M:%S", time.gmtime(eta))
+                elapsed_str = time.strftime("%H:%M:%S", time.gmtime(elapsed))
+            else:
+                elapsed_str = "00:00:00"
+                eta_str = "unknown"
+            print(f"\n{'='*60}")
+            print(f"[{index}/{total}]  elapsed: {elapsed_str}  eta: {eta_str}")
+            print(f"File:       {file_abs}")
+            print(f"Output dir: {out_dir}")
+            print(f"{'='*60}\n")
+            try:
+                process_file(file_abs, out_dir)
+            except Exception as e:
+                print(f"ERROR processing {file_abs}: {e}")
+    else:
+        # Single-file mode (original behaviour)
+        setup()
+        run()
 
 
 if __name__ == "__main__":
