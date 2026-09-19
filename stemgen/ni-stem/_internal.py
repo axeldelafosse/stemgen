@@ -196,7 +196,12 @@ class StemCreator:
 
                     converterArgs = [qaac]
                     converterArgs.extend([trackPath])
-                    converterArgs.extend(["--tvbr", "127"])
+                    
+                    # Force AAC-LC, 320kbps CBR, 48kHz
+                    converterArgs.extend(["--cbr", "320"])    # Traktor expected bitrate = 320 kbps CBR
+                    converterArgs.extend(["--quality", "96"]) # 96 = best quality
+                    converterArgs.extend(["--rate", "48000"]) # 48kHz
+
                     converterArgs.extend(["-o"])
                 else:
                     aacCodec = _getAacCodec()
@@ -206,12 +211,13 @@ class StemCreator:
 
                     converterArgs.extend(["-i", trackPath])
                     converterArgs.extend(["-c:a", aacCodec])
-                    if aacCodec == "aac_at":
-                        converterArgs.extend(["-q:a", "0"])
-                    elif aacCodec == "libfdk_aac":
-                        converterArgs.extend(["-vbr", "5"])
-                        # converterArgs.extend(["-cutoff", "20000"])
+
+                    # Force AAC-LC @ 320kbps CBR
+                    converterArgs.extend(["-b:a", "320k"])           # Traktor expected bitrate = 320 kbps CBR
+                    converterArgs.extend(["-profile:a", "aac_low"])  # force AAC-LC profile
+
                     converterArgs.extend(["-c:v", "copy"])
+                    
                     # If the sample rate is superior to 48kHz, we need to downsample to 48kHz
                     if sampleRate > 48000:
                         print(str(sampleRate) + "Hz sample rate, downsampling to 48kHz")
